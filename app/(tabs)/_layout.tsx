@@ -1,6 +1,6 @@
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { ICONS } from '@/constants/types';
+import { HapticTab } from '@/components/atom/haptic-tab';
+import { IconSymbol } from '@/components/atom/icon-symbol';
+import { ICONS } from '@/constants';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
@@ -12,7 +12,6 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        // tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: !false,
         tabBarButton: HapticTab,
       }}>

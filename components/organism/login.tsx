@@ -7,12 +7,9 @@ export function LoginForm() {
   const [password, setPassword] = useState("my11111");
 
   const {
-    user,
     register,
     signIn,
   } = useFirebaseAuth();
-
-  console.log({ user })
 
   return (
     <View style={styles.container}>
@@ -47,16 +44,15 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
   },
   buttonWrapper: {
-    margin: 8,
+    marginBottom: 24,
+    width: 300,
   },
   textInput: {
-    padding: 15,
     borderRadius: 15,
     borderWidth: 1,
     width: 300,
-    marginBottom: 30,
+    marginBottom: 24,
   },
 });

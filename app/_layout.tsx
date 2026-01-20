@@ -1,4 +1,4 @@
-import { LoginForm } from '@/components/login';
+import { LoginForm } from '@/components/organism/login';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { Stack } from 'expo-router';
 
