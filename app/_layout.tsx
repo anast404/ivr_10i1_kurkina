@@ -1,4 +1,4 @@
-import { LoginForm } from '@/components/organism/login';
+import { LoginForm } from '@/components/organism/login-form';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { Stack } from 'expo-router';
 
@@ -11,11 +11,12 @@ export default function RootLayout() {
     user,
   } = useFirebaseAuth();
 
-  if(!user) {
-    return(<LoginForm />)
+  if (!user) {
+    // если пользователь неопределен то показываем форму авторизации
+    return (<LoginForm />)
   }
 
-  return(<RootLayoutNav/>)
+  return (<RootLayoutNav />)
 }
 
 function RootLayoutNav() {

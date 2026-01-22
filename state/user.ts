@@ -2,9 +2,8 @@
 import { create } from "zustand";
 
 interface UserStore {
-    // user: FirebaseAuthTypes.User | null;
+    //todo: type ??? FirebaseAuthTypes.User | null;
     user: any;
-    // setUser(user: FirebaseAuthTypes.User | null): void;
     setUser(user: any): void;
 }
 

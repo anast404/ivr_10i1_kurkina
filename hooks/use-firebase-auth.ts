@@ -1,14 +1,22 @@
 import useUserStore from "@/state/user";
-import { signOut as authSignOut, createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signOut as authSignOut,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword
+} from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { useEffect } from "react";
-import { app, db } from "../firebaseConfig.js";
+import { auth, db } from "../firebaseConfig";
 
 export function useFirebaseAuth() {
-  const auth = getAuth(app);
-
   const { user, setUser } = useUserStore((state) => state);
 
+  /**
+   * регистрация пользователя
+   * @param email почта
+   * @param password пароль
+   */
   const register = async (email: string, password: string) => {
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
@@ -20,6 +28,11 @@ export function useFirebaseAuth() {
     }
   };
 
+  /**
+   * вход
+   * @param email почта
+   * @param password пароль
+   */
   const signIn = async (
     email: string,
     password: string
@@ -34,6 +47,9 @@ export function useFirebaseAuth() {
     }
   };
 
+  /**
+   * выход
+   */
   const signOut = async () => {
     try {
       await authSignOut(auth);

@@ -8,5 +8,6 @@ const styles = StyleSheet.create({
   default: {
     borderRadius: 15,
     borderWidth: 1,
+    padding: 8,
   },
 });

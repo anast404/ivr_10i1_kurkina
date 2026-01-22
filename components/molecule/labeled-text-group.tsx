@@ -14,19 +14,24 @@ type TLabeledTextGroup = ViewProps & {
 }
 
 export function LabeledTextGroup({ style, label, value, editable, onChangeText }: TLabeledTextGroup) {
+  // режим редактирования
   const [isEditing, setEditing] = useState(false);
+  // новое значение поля
   const [newValue, setValue] = useState(value);
 
+  // перевод поля в режим редактирования
   const onEdit = () => {
     setValue(value)
 
     setEditing(true)
   }
 
+  // отмена редактирования
   const onCancel = () => {
     setEditing(false)
   }
 
+  // принятие результата редактирования
   const onSend = () => {
     setEditing(false)
 

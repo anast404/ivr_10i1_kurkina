@@ -1,6 +1,7 @@
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import React, { useState } from 'react';
-import { Button, StyleSheet, TextInput, View } from 'react-native';
+import { Button, StyleSheet, View } from 'react-native';
+import { StyledTextInput } from '../atom/styled-text-input';
 
 export function LoginForm() {
   const [email, setEmail] = useState("bacrilio@gmail.com");
@@ -13,13 +14,13 @@ export function LoginForm() {
 
   return (
     <View style={styles.container}>
-      <TextInput
+      <StyledTextInput
         style={styles.textInput}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
       />
-      <TextInput
+      <StyledTextInput
         style={styles.textInput}
         placeholder="Password"
         secureTextEntry
