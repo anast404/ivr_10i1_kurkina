@@ -89,7 +89,6 @@ export function usePills() {
     await load();
   };
 
-  // Сортировка и фильтрация
   const processedPills = pills
     .filter((p) => filterStatus === 'all' || getPillStatus(p.expiresAt) === filterStatus)
     .sort((a, b) => {
