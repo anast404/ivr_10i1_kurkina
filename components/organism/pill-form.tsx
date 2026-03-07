@@ -77,7 +77,7 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
           <View style={styles.handle} />
 
           <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>{initial ? '✎ Редактировать' : '＋ Добавить лекарство'}</Text>
+            <Text style={styles.sheetTitle}>{initial ? 'Редактировать' : 'Добавить лекарство'}</Text>
             <Pressable style={styles.closeBtn} onPress={onClose}>
               <Text style={styles.closeBtnText}>✕</Text>
             </Pressable>

@@ -1,0 +1,21 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="80" cy="150" rx="42" ry="7" fill="#D4EAD9" opacity="0.5"/>
+  <!-- горшок -->
+  <path d="M56 150 L50 110 L110 110 L104 150Z" fill="#D4A882"/>
+  <rect x="48" y="104" width="64" height="12" rx="6" fill="#C49070"/>
+  <ellipse cx="80" cy="110" rx="28" ry="6" fill="#B89060" opacity="0.5"/>
+  <!-- стебель пунктир -->
+  <path d="M80 110 Q80 88 80 72" stroke="#B2D4BC" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 3"/>
+  <!-- листики бледные -->
+  <path d="M80 90 Q66 80 62 68 Q76 72 80 90Z" fill="#D4EAD9" opacity="0.8"/>
+  <path d="M80 84 Q94 74 98 62 Q84 66 80 84Z" fill="#D4EAD9" opacity="0.8"/>
+  <!-- капля -->
+  <path d="M80 70 Q78 62 80 56 Q82 62 80 70Z" fill="#7AAFC9" opacity="0.4"/>
+  <!-- кружок с вопросом -->
+  <circle cx="80" cy="46" r="16" fill="#EEF7F1"/>
+  <text x="80" y="53" text-anchor="middle" font-size="18" font-weight="800" fill="#B2D4BC" font-family="-apple-system,sans-serif">?</text>
+  <!-- звёздочки -->
+  <circle cx="30" cy="60" r="3" fill="#FAE3A0" opacity="0.4"/>
+  <circle cx="130" cy="50" r="2" fill="#FAE3A0" opacity="0.3"/>
+  <circle cx="140" cy="80" r="2.5" fill="#B2D4BC" opacity="0.4"/>
+</svg>

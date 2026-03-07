@@ -16,6 +16,15 @@ import {
   View,
 } from 'react-native';
 
+// ─── SVG иллюстрации ────────────────────────────────────────────────────────
+import PlantsHero  from '@/assets/images/plants-hero.svg';
+import PlantsEmpty from '@/assets/images/plants-empty.svg';
+// иконки статуса полива в карточке
+import PlantOk       from '@/assets/images/plant-ok.svg';
+import PlantDueToday from '@/assets/images/plant-due-today.svg';
+import PlantOverdue  from '@/assets/images/plant-overdue.svg';
+import WateringCan   from '@/assets/images/watering-can.svg';
+
 // ─── Палитра ────────────────────────────────────────────────────────────────
 const C = {
   sageDark:  '#4E7D62',
@@ -33,7 +42,7 @@ const C = {
   sky:       '#7AAFC9',
 };
 
-import { WaterFrequency } from '@/types/plant';
+import { WaterFrequency, WaterStatus } from '@/types/plant';
 import { getCareRecords, waterPlant } from '@/utils/plants-store';
 import { getDocument } from '@/utils/firebase-store';
 import useUserStore from '@/state/user';
@@ -42,7 +51,14 @@ import { getPlants, addPlant, updatePlant, deletePlant } from '@/utils/plants-st
 
 const FREQUENCY_OPTIONS = Object.values(WaterFrequency);
 
-// ─── Форма растения (встроена) ───────────────────────────────────────────────
+// ─── Маппинг иконок статуса полива ──────────────────────────────────────────
+const WaterStatusIcon = {
+  [WaterStatus.ok]:        PlantOk,
+  [WaterStatus.due_today]: PlantDueToday,
+  [WaterStatus.overdue]:   PlantOverdue,
+};
+
+// ─── Форма растения ──────────────────────────────────────────────────────────
 function PlantFormModal({
   visible, initial, onSave, onClose,
 }: {
@@ -72,7 +88,7 @@ function PlantFormModal({
       <View style={fs.overlay}>
         <View style={fs.sheet}>
           <View style={fs.header}>
-            <Text style={fs.title}>{initial ? '✏️ Редактировать' : '🌱 Новое растение'}</Text>
+            <Text style={fs.title}>{initial ? 'Редактировать' : 'Новое растение'}</Text>
             <TouchableOpacity onPress={onClose} style={fs.closeBtn}>
               <Text style={fs.closeBtnText}>✕</Text>
             </TouchableOpacity>
@@ -130,7 +146,7 @@ function PlantFormModal({
   );
 }
 
-// ─── Карточка растения (встроена) ────────────────────────────────────────────
+// ─── Карточка растения ───────────────────────────────────────────────────────
 function PlantCard({
   plant, onEdit, onDelete, onWater, getHistory,
 }: {
@@ -140,11 +156,11 @@ function PlantCard({
   onWater: (id: string) => void;
   getHistory: (id: string) => Promise<TCareRecord[]>;
 }) {
-  const freqDays  = WATER_FREQUENCY_DAYS[plant.waterFrequency];
-  const status    = getWaterStatus(plant.lastWateredAt, freqDays);
-  const color     = WATER_STATUS_COLOR[status];
-  const label     = WATER_STATUS_LABEL[status];
-  const days      = daysUntilWater(plant.lastWateredAt, freqDays);
+  const freqDays = WATER_FREQUENCY_DAYS[plant.waterFrequency];
+  const status   = getWaterStatus(plant.lastWateredAt, freqDays);
+  const color    = WATER_STATUS_COLOR[status];
+  const label    = WATER_STATUS_LABEL[status];
+  const days     = daysUntilWater(plant.lastWateredAt, freqDays);
 
   const [historyVisible, setHistoryVisible] = useState(false);
   const [history, setHistory]               = useState<TCareRecord[]>([]);
@@ -155,7 +171,7 @@ function PlantCard({
   });
 
   const handleWater = () => {
-    Alert.alert('💧 Полив', `Отметить полив «${plant.name}»?`, [
+    Alert.alert('Полив', `Отметить полив «${plant.name}»?`, [
       { text: 'Отмена', style: 'cancel' },
       { text: 'Полить', onPress: () => onWater(plant.id) },
     ]);
@@ -175,6 +191,8 @@ function PlantCard({
     ? 'Полить сегодня!'
     : `Просрочено на ${Math.abs(days)} дн.`;
 
+  const StatusIcon = WaterStatusIcon[status];
+
   return (
     <>
       <View style={pc.card}>
@@ -184,12 +202,12 @@ function PlantCard({
         <View style={pc.body}>
           {/* Заголовок */}
           <View style={pc.header}>
-            <View style={[pc.iconCircle, { backgroundColor: color + '22' }]}>
-              <Text style={pc.iconEmoji}>🌿</Text>
+            <View style={pc.iconCircle}>
+              <StatusIcon width={28} height={28} />
             </View>
             <View style={pc.titleWrap}>
               <Text style={pc.name}>{plant.name}</Text>
-              <Text style={pc.freq}>🔄 {WATER_FREQUENCY_LABEL[plant.waterFrequency]}</Text>
+              <Text style={pc.freq}>{WATER_FREQUENCY_LABEL[plant.waterFrequency]}</Text>
             </View>
             <View style={pc.actions}>
               <Pressable style={pc.actionBtn} onPress={() => onEdit(plant)}>
@@ -213,15 +231,15 @@ function PlantCard({
           </View>
 
           {/* Последний полив */}
-          <Text style={pc.lastWatered}>💧 Последний полив: {lastDate}</Text>
+          <Text style={pc.lastWatered}>Последний полив: {lastDate}</Text>
 
           {/* Кнопки */}
           <View style={pc.btnRow}>
             <Pressable style={pc.historyBtn} onPress={openHistory}>
-              <Text style={pc.historyBtnText}>📋 История</Text>
+              <Text style={pc.historyBtnText}>История</Text>
             </Pressable>
             <Pressable style={[pc.waterBtn, { backgroundColor: color }]} onPress={handleWater}>
-              <Text style={pc.waterBtnText}>💧 Полить</Text>
+              <Text style={pc.waterBtnText}>Полить</Text>
             </Pressable>
           </View>
         </View>
@@ -326,46 +344,55 @@ export default function PlantsScreen() {
 
   const getHistory = (plantId: string) => getCareRecords(plantId);
 
-  const openAdd = () => { setEditTarget(null); setFormVisible(true); };
+  const openAdd  = () => { setEditTarget(null); setFormVisible(true); };
   const openEdit = (p: TPlant) => { setEditTarget(p); setFormVisible(true); };
 
   return (
     <View style={s.root}>
-      {/* ── Шапка ── */}
-      <View style={s.header}>
-        <View style={s.headerBg} />
-        <View style={s.headerContent}>
-          <View>
-            <Text style={s.headerLabel}>Картотека</Text>
-            <Text style={s.headerTitle}>🌿 Растения</Text>
-          </View>
-          <Pressable
-            style={({ pressed }) => [s.addBtn, pressed && s.addBtnPressed]}
-            onPress={openAdd}
-          >
-            <Text style={s.addBtnText}>＋ Добавить</Text>
-          </Pressable>
-        </View>
 
-        {/* Статистика */}
-        {plants.length > 0 && (
-          <View style={s.stats}>
-            <View style={s.statItem}>
-              <Text style={s.statNum}>{plants.length}</Text>
-              <Text style={s.statLabel}>всего</Text>
+      <View style={s.header}>
+        {/* Иллюстрация на весь фон шапки */}
+        <PlantsHero
+          width="100%"
+          height={160}
+          style={s.heroImage}
+          preserveAspectRatio="xMidYMid slice"
+        />
+        {/* Текст поверх иллюстрации */}
+        <View style={s.headerOverlay}>
+          <View style={s.headerContent}>
+            <View>
+              <Text style={s.headerLabel}>Картотека</Text>
+              <Text style={s.headerTitle}>Растения</Text>
             </View>
-            <View style={s.statDivider} />
-            <View style={s.statItem}>
-              <Text style={[s.statNum, { color: C.orange }]}>
-                {plants.filter(p => {
-                  const st = getWaterStatus(p.lastWateredAt, WATER_FREQUENCY_DAYS[p.waterFrequency]);
-                  return st !== 'ok';
-                }).length}
-              </Text>
-              <Text style={s.statLabel}>нужен полив</Text>
-            </View>
+            <Pressable
+              style={({ pressed }) => [s.addBtn, pressed && s.addBtnPressed]}
+              onPress={openAdd}
+            >
+              <Text style={s.addBtnText}>＋ Добавить</Text>
+            </Pressable>
           </View>
-        )}
+
+          {/* Статистика */}
+          {plants.length > 0 && (
+            <View style={s.stats}>
+              <View style={s.statItem}>
+                <Text style={s.statNum}>{plants.length}</Text>
+                <Text style={s.statLabel}>всего</Text>
+              </View>
+              <View style={s.statDivider} />
+              <View style={s.statItem}>
+                <Text style={[s.statNum, { color: C.orange }]}>
+                  {plants.filter(p => {
+                    const st = getWaterStatus(p.lastWateredAt, WATER_FREQUENCY_DAYS[p.waterFrequency]);
+                    return st !== 'ok';
+                  }).length}
+                </Text>
+                <Text style={s.statLabel}>нужен полив</Text>
+              </View>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* ── Список ── */}
@@ -385,7 +412,7 @@ export default function PlantsScreen() {
         </View>
       ) : plants.length === 0 ? (
         <View style={s.centered}>
-          <Text style={s.emptyEmoji}>🪴</Text>
+          <PlantsEmpty width={160} height={160} />
           <Text style={s.emptyTitle}>Пока пусто</Text>
           <Text style={s.emptyText}>Добавьте первое растение и следите за его поливом</Text>
           <Pressable style={s.emptyBtn} onPress={openAdd}>
@@ -426,19 +453,21 @@ const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.cream },
 
   header: {
-    backgroundColor: C.sageDark,
-    paddingTop: 48,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
     position: 'relative',
     overflow: 'hidden',
   },
-  headerBg: {
-    position: 'absolute', width: 200, height: 200, borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.06)', top: -60, right: -40,
+  heroImage: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+  },
+  headerOverlay: {
+    paddingTop: 48,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(78,125,98,0.80)', // полупрозрачный sage поверх SVG
   },
   headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  headerLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase' },
+  headerLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.65)', letterSpacing: 1, textTransform: 'uppercase' },
   headerTitle: { fontSize: 26, fontWeight: '800', color: C.white, marginTop: 2 },
 
   addBtn: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 99, paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
@@ -456,7 +485,7 @@ const s = StyleSheet.create({
 
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: C.charcoal, marginBottom: 6 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: C.charcoal, marginBottom: 6, marginTop: 8 },
   emptyText: { fontSize: 14, color: C.stone, textAlign: 'center', lineHeight: 20, fontWeight: '600' },
   emptyBtn: { marginTop: 20, backgroundColor: C.sageDark, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12 },
   emptyBtnText: { color: C.white, fontWeight: '800', fontSize: 14 },
@@ -474,8 +503,7 @@ const pc = StyleSheet.create({
   bar: { width: 5 },
   body: { flex: 1, padding: 14 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 10 },
-  iconCircle: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  iconEmoji: { fontSize: 20 },
+  iconCircle: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   titleWrap: { flex: 1 },
   name: { fontSize: 16, fontWeight: '800', color: C.charcoal },
   freq: { fontSize: 12, color: C.stone, fontWeight: '600', marginTop: 1 },
@@ -493,6 +521,7 @@ const pc = StyleSheet.create({
   historyBtn: { flex: 1, borderRadius: 10, borderWidth: 1.5, borderColor: '#E0EBE4', paddingVertical: 8, alignItems: 'center' },
   historyBtnText: { fontSize: 13, fontWeight: '700', color: C.stone },
   waterBtn: { flex: 1, borderRadius: 10, paddingVertical: 8, alignItems: 'center' },
+  waterBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   waterBtnText: { fontSize: 13, fontWeight: '800', color: C.white },
 });
 

@@ -1,4 +1,5 @@
 import { LoginForm } from '@/components/organism/login-form';
+import { EmailVerification } from '@/components/organism/email-verification';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { Stack } from 'expo-router';
 
@@ -7,16 +8,19 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const {
-    user,
-  } = useFirebaseAuth();
+  const { user } = useFirebaseAuth();
 
+  // Не авторизован → форма входа
   if (!user) {
-    // если пользователь неопределен то показываем форму авторизации
-    return (<LoginForm />)
+    return <LoginForm />;
   }
 
-  return (<RootLayoutNav />)
+  // Авторизован, но почта не подтверждена → экран верификации
+  if (!user.emailVerified) {
+    return <EmailVerification />;
+  }
+
+  return <RootLayoutNav />;
 }
 
 function RootLayoutNav() {

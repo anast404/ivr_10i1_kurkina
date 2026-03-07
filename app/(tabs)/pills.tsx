@@ -13,6 +13,10 @@ import {
 import { PillCard } from '@/components/organism/pill-card';
 import { PillForm } from '@/components/organism/pill-form';
 
+// ─── SVG иллюстрации ────────────────────────────────────────────────────────
+import PillsHero  from '@/assets/images/pills-hero.svg';
+import PillsEmpty from '@/assets/images/pills-empty.svg';
+
 const C = {
   sky:       '#7AAFC9',
   skyDark:   '#4E8FAD',
@@ -35,10 +39,10 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 ];
 
 const FILTER_OPTIONS: { key: PillStatus | 'all'; label: string; emoji: string }[] = [
-  { key: 'all',                   label: 'Все',       emoji: '💊' },
-  { key: PillStatus.expired,      label: 'Просрочено', emoji: '🔴' },
-  { key: PillStatus.expiring_soon,label: 'Истекает',   emoji: '🟠' },
-  { key: PillStatus.ok,           label: 'В порядке',  emoji: '🟢' },
+  { key: 'all',                    label: 'Все'},
+  { key: PillStatus.expired,       label: 'Просрочено'},
+  { key: PillStatus.expiring_soon, label: 'Истекает'},
+  { key: PillStatus.ok,            label: 'В порядке'},
 ];
 
 export default function PillsScreen() {
@@ -71,6 +75,7 @@ export default function PillsScreen() {
   if (!familyUuid) {
     return (
       <View style={styles.centered}>
+        {/* Нет семьи — оставляем эмодзи, тут иллюстрация не нужна */}
         <Text style={styles.emptyEmoji}>🏠</Text>
         <Text style={styles.emptyTitle}>Нет семьи</Text>
         <Text style={styles.emptyText}>
@@ -80,50 +85,57 @@ export default function PillsScreen() {
     );
   }
 
-  // Статистика
-  const expiredCount  = pills.filter(p => p.expiresAt && new Date(p.expiresAt) < new Date()).length;
-  const totalCount    = pills.length;
+  const expiredCount = pills.filter(p => p.expiresAt && new Date(p.expiresAt) < new Date()).length;
+  const totalCount   = pills.length;
 
   return (
     <View style={styles.root}>
 
-      {/* ── Шапка ── */}
       <View style={styles.header}>
-        <View style={styles.headerBgCircle} />
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.headerTitle}>💊 Аптечка</Text>
-            <Text style={styles.headerSub}>
-              {totalCount} лекарств{expiredCount > 0 ? ` · ${expiredCount} просрочено` : ''}
-            </Text>
-          </View>
-          <Pressable
-            style={({ pressed }) => [styles.addBtn, pressed && styles.addBtnPressed]}
-            onPress={openAdd}
-          >
-            <Text style={styles.addBtnText}>＋ Добавить</Text>
-          </Pressable>
-        </View>
-
-        {/* Фильтры */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
-        >
-          {FILTER_OPTIONS.map((opt) => (
-            <Pressable
-              key={opt.key}
-              style={[styles.filterChip, filterStatus === opt.key && styles.filterChipActive]}
-              onPress={() => setFilterStatus(opt.key)}
-            >
-              <Text style={styles.filterEmoji}>{opt.emoji}</Text>
-              <Text style={[styles.filterLabel, filterStatus === opt.key && styles.filterLabelActive]}>
-                {opt.label}
+        {/* Иллюстрация растянута на всю шапку */}
+        <PillsHero
+          width="100%"
+          height={130}
+          style={styles.heroImage}
+          preserveAspectRatio="xMidYMid slice"
+        />
+        {/* Текст поверх иллюстрации */}
+        <View style={styles.headerOverlay}>
+          <View style={styles.headerTop}>
+            <View>
+              <Text style={styles.headerTitle}>Аптечка</Text>
+              <Text style={styles.headerSub}>
+                {totalCount} лекарств{expiredCount > 0 ? ` · ${expiredCount} просрочено` : ''}
               </Text>
+            </View>
+            <Pressable
+              style={({ pressed }) => [styles.addBtn, pressed && styles.addBtnPressed]}
+              onPress={openAdd}
+            >
+              <Text style={styles.addBtnText}>+ Добавить</Text>
             </Pressable>
-          ))}
-        </ScrollView>
+          </View>
+
+          {/* Фильтры */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+          >
+            {FILTER_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.key}
+                style={[styles.filterChip, filterStatus === opt.key && styles.filterChipActive]}
+                onPress={() => setFilterStatus(opt.key)}
+              >
+                <Text style={styles.filterEmoji}>{opt.emoji}</Text>
+                <Text style={[styles.filterLabel, filterStatus === opt.key && styles.filterLabelActive]}>
+                  {opt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
       </View>
 
       {/* ── Сортировка ── */}
@@ -149,12 +161,12 @@ export default function PillsScreen() {
         </View>
       ) : error ? (
         <View style={styles.centered}>
-          <Text style={styles.errorEmoji}>⚠️</Text>
+          <Text style={styles.errorEmoji}>️'Ошибка!'</Text>
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : pills.length === 0 ? (
         <View style={styles.centered}>
-          <Text style={styles.emptyEmoji}>💊</Text>
+          <PillsEmpty width={160} height={160} />
           <Text style={styles.emptyTitle}>
             {filterStatus !== 'all' ? 'Ничего не найдено' : 'Аптечка пуста'}
           </Text>
@@ -191,18 +203,18 @@ const styles = StyleSheet.create({
 
   // Шапка
   header: {
-    backgroundColor: C.skyDark,
-    paddingTop: 52,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
     position: 'relative',
     overflow: 'hidden',
   },
-  headerBgCircle: {
+  heroImage: {
     position: 'absolute',
-    width: 200, height: 200, borderRadius: 100,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    top: -50, right: -50,
+    top: 0, left: 0, right: 0, bottom: 0,
+  },
+  headerOverlay: {
+    paddingTop: 52,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(78,143,173,0.82)', // полупрозрачный цвет поверх SVG
   },
   headerTop: {
     flexDirection: 'row',
@@ -211,7 +223,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerTitle: { fontSize: 24, fontWeight: '800', color: '#fff', letterSpacing: -0.3 },
-  headerSub:   { fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: '600', marginTop: 2 },
+  headerSub:   { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '600', marginTop: 2 },
 
   addBtn: {
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -259,7 +271,7 @@ const styles = StyleSheet.create({
   // Пустые состояния
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '800', color: C.charcoal, marginBottom: 6 },
+  emptyTitle: { fontSize: 18, fontWeight: '800', color: C.charcoal, marginBottom: 6, marginTop: 8 },
   emptyText:  { fontSize: 14, color: C.stone, textAlign: 'center', lineHeight: 20, fontWeight: '600' },
   errorEmoji: { fontSize: 40, marginBottom: 10 },
   errorText:  { fontSize: 14, color: C.red, textAlign: 'center', fontWeight: '700' },

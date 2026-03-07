@@ -1,0 +1,20 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="80" cy="148" rx="44" ry="8" fill="#E0EBF0" opacity="0.6"/>
+  <!-- чемоданчик открытый -->
+  <rect x="28" y="60" width="104" height="80" rx="14" fill="#EBF4FF"/>
+  <rect x="28" y="60" width="104" height="14" rx="7" fill="#C8DFF7"/>
+  <!-- крышка открытая -->
+  <path d="M28 74 Q28 44 52 38 L108 38 Q132 44 132 74" fill="#FFFFFF" stroke="#C8DFF7" stroke-width="1.5"/>
+  <!-- крест на крышке -->
+  <rect x="72" y="50" width="16" height="5" rx="2.5" fill="#7AAFC9" opacity="0.5"/>
+  <rect x="77" y="45" width="5" height="16" rx="2.5" fill="#7AAFC9" opacity="0.5"/>
+  <!-- пусто внутри -->
+  <rect x="40" y="82" width="80" height="48" rx="8" fill="#FFFFFF" opacity="0.6"/>
+  <rect x="52" y="94" width="56" height="6" rx="3" fill="#C8DFF7" opacity="0.5"/>
+  <rect x="60" y="106" width="40" height="6" rx="3" fill="#C8DFF7" opacity="0.4"/>
+  <text x="80" y="130" text-anchor="middle" font-size="18" font-weight="800" fill="#7AAFC9" opacity="0.4" font-family="-apple-system,sans-serif">?</text>
+  <!-- звёздочки -->
+  <circle cx="22" cy="72" r="3" fill="#FAE3A0" opacity="0.5"/>
+  <circle cx="138" cy="55" r="2" fill="#FAE3A0" opacity="0.4"/>
+  <circle cx="30" cy="45" r="2" fill="#C8DFF7" opacity="0.6"/>
+</svg>
