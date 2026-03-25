@@ -2,10 +2,10 @@ import { usePlants } from '@/hooks/use-plants';
 import { TPlant, TCreatePlant, WATER_FREQUENCY_DAYS, WATER_FREQUENCY_LABEL } from '@/types/plant';
 import { getWaterStatus, daysUntilWater, WATER_STATUS_COLOR, WATER_STATUS_LABEL } from '@/hooks/use-plants';
 import { TCareRecord } from '@/types/plant';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
+  Animated,
   Modal,
   Pressable,
   ScrollView,
@@ -17,55 +17,181 @@ import {
 } from 'react-native';
 
 // ─── SVG иллюстрации ────────────────────────────────────────────────────────
-import PlantsHero  from '@/assets/images/plants-hero.svg';
-import PlantsEmpty from '@/assets/images/plants-empty.svg';
-// иконки статуса полива в карточке
+import PlantsHero    from '@/assets/images/plants-hero.svg';
+import PlantsEmpty   from '@/assets/images/plants-empty.svg';
 import PlantOk       from '@/assets/images/plant-ok.svg';
 import PlantDueToday from '@/assets/images/plant-due-today.svg';
 import PlantOverdue  from '@/assets/images/plant-overdue.svg';
 import WateringCan   from '@/assets/images/watering-can.svg';
 
-// ─── Палитра ────────────────────────────────────────────────────────────────
-const C = {
-  sageDark:  '#4E7D62',
-  sage:      '#7BAF8E',
-  sageLight: '#B2D4BC',
-  sagePale:  '#EEF7F1',
-  cream:     '#FAF6EF',
-  warm:      '#F0E8D8',
-  charcoal:  '#2D3A32',
-  stone:     '#8A9488',
-  white:     '#FFFFFF',
-  red:       '#D95B5B',
-  orange:    '#E8973A',
-  green:     '#5BA86A',
-  sky:       '#7AAFC9',
-};
-
 import { WaterFrequency, WaterStatus } from '@/types/plant';
 import { getCareRecords, waterPlant } from '@/utils/plants-store';
 import { getDocument } from '@/utils/firebase-store';
 import useUserStore from '@/state/user';
-import { useCallback, useEffect } from 'react';
 import { getPlants, addPlant, updatePlant, deletePlant } from '@/utils/plants-store';
+
+// ─── Палитра ────────────────────────────────────────────────────────────────
+const C = {
+  sageDark:   '#4E7D62',
+  sage:       '#7BAF8E',
+  sageLight:  '#B2D4BC',
+  sagePale:   '#EEF7F1',
+  cream:      '#FAF6EF',
+  charcoal:   '#2D3A32',
+  stone:      '#8A9488',
+  white:      '#FFFFFF',
+  red:        '#D95B5B',
+  redPale:    '#FDEAEA',
+  orange:     '#E8973A',
+  sky:        '#7AAFC9',
+  skyDark:    '#4E8FAD',
+  skyPale:    '#EBF4FF',
+};
 
 const FREQUENCY_OPTIONS = Object.values(WaterFrequency);
 
-// ─── Маппинг иконок статуса полива ──────────────────────────────────────────
 const WaterStatusIcon = {
   [WaterStatus.ok]:        PlantOk,
   [WaterStatus.due_today]: PlantDueToday,
   [WaterStatus.overdue]:   PlantOverdue,
 };
 
-// ─── Форма растения ──────────────────────────────────────────────────────────
-function PlantFormModal({
-  visible, initial, onSave, onClose,
-}: {
-  visible: boolean;
-  initial?: TPlant | null;
-  onSave: (data: TCreatePlant) => void;
-  onClose: () => void;
+// ══════════════════════════════════════════════════════════════════════════════
+// Базовый animated sheet для модалок подтверждения
+// ══════════════════════════════════════════════════════════════════════════════
+function ConfirmSheet({ visible, onClose, children }: {
+  visible: boolean; onClose: () => void; children: React.ReactNode;
+}) {
+  const scale   = useRef(new Animated.Value(0.92)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.spring(scale,   { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 260 }),
+        Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
+      ]).start();
+    } else {
+      scale.setValue(0.92);
+      opacity.setValue(0);
+    }
+  }, [visible]);
+
+  return (
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <Pressable style={md.backdrop} onPress={onClose}>
+        <Animated.View style={[md.sheet, { opacity, transform: [{ scale }] }]}>
+          <Pressable onPress={() => {}}>{children}</Pressable>
+        </Animated.View>
+      </Pressable>
+    </Modal>
+  );
+}
+
+// ── Модалка полива ───────────────────────────────────────────────────────────
+function WaterModal({ visible, plantName, onConfirm, onClose }: {
+  visible: boolean; plantName: string; onConfirm: () => void; onClose: () => void;
+}) {
+  return (
+    <ConfirmSheet visible={visible} onClose={onClose}>
+      <View style={[md.topBar, { backgroundColor: C.skyDark }]} />
+      <View style={md.body}>
+        <View style={[md.iconWrap, { backgroundColor: C.skyPale }]}>
+          <Text style={md.iconEmoji}>💧</Text>
+        </View>
+        <Text style={md.title}>Полив</Text>
+        <Text style={md.message}>
+          Отметить полив растения{'\n'}
+          <Text style={[md.accent, { color: C.skyDark }]}>«{plantName}»</Text>?
+        </Text>
+        <View style={md.btnRow}>
+          <Pressable style={({ pressed }) => [md.btnCancel, pressed && md.pressed]} onPress={onClose}>
+            <Text style={md.btnCancelText}>Отмена</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [md.btnConfirm, { backgroundColor: C.skyDark }, pressed && md.pressed]}
+            onPress={() => { onConfirm(); onClose(); }}
+          >
+            <Text style={md.btnConfirmText}>💧 Полить</Text>
+          </Pressable>
+        </View>
+      </View>
+    </ConfirmSheet>
+  );
+}
+
+// ── Модалка удаления ─────────────────────────────────────────────────────────
+function DeleteModal({ visible, plantName, onConfirm, onClose }: {
+  visible: boolean; plantName: string; onConfirm: () => void; onClose: () => void;
+}) {
+  return (
+    <ConfirmSheet visible={visible} onClose={onClose}>
+      <View style={[md.topBar, { backgroundColor: C.red }]} />
+      <View style={md.body}>
+        <View style={[md.iconWrap, { backgroundColor: C.redPale }]}>
+          <Text style={md.iconEmoji}>🗑</Text>
+        </View>
+        <Text style={md.title}>Удалить?</Text>
+        <Text style={md.message}>
+          Вы удалите растение{'\n'}
+          <Text style={[md.accent, { color: C.red }]}>«{plantName}»</Text>.{'\n'}
+          <Text style={md.messageSmall}>Это действие нельзя отменить.</Text>
+        </Text>
+        <View style={md.btnRow}>
+          <Pressable style={({ pressed }) => [md.btnCancel, pressed && md.pressed]} onPress={onClose}>
+            <Text style={md.btnCancelText}>Отмена</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [md.btnConfirm, { backgroundColor: C.red }, pressed && md.pressed]}
+            onPress={() => { onConfirm(); onClose(); }}
+          >
+            <Text style={md.btnConfirmText}>Удалить</Text>
+          </Pressable>
+        </View>
+      </View>
+    </ConfirmSheet>
+  );
+}
+
+// ─── Стили модалок ───────────────────────────────────────────────────────────
+const md = StyleSheet.create({
+  backdrop: {
+    flex: 1, backgroundColor: 'rgba(45,58,50,0.5)',
+    justifyContent: 'center', alignItems: 'center', padding: 28,
+  },
+  sheet: {
+    width: '100%', backgroundColor: C.white, borderRadius: 28, overflow: 'hidden',
+    shadowColor: C.charcoal, shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18, shadowRadius: 32, elevation: 16,
+  },
+  topBar: { height: 5 },
+  body: { padding: 28, paddingTop: 24, alignItems: 'center' },
+  iconWrap: { width: 72, height: 72, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  iconEmoji: { fontSize: 34 },
+  title: { fontSize: 22, fontWeight: '800', color: C.charcoal, letterSpacing: -0.3, marginBottom: 8, textAlign: 'center' },
+  message: { fontSize: 15, color: C.stone, fontWeight: '600', textAlign: 'center', lineHeight: 22, marginBottom: 28 },
+  messageSmall: { fontSize: 13, color: C.stone, fontWeight: '600' },
+  accent: { fontWeight: '800' },
+  btnRow: { flexDirection: 'row', gap: 10, width: '100%' },
+  btnCancel: {
+    flex: 1, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
+    backgroundColor: C.cream, borderWidth: 1.5, borderColor: '#E8E0D4',
+  },
+  btnConfirm: {
+    flex: 1.4, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12, elevation: 6,
+  },
+  pressed: { opacity: 0.82 },
+  btnCancelText: { fontSize: 15, fontWeight: '800', color: C.stone },
+  btnConfirmText: { fontSize: 15, fontWeight: '800', color: C.white },
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Форма растения
+// ══════════════════════════════════════════════════════════════════════════════
+function PlantFormModal({ visible, initial, onSave, onClose }: {
+  visible: boolean; initial?: TPlant | null;
+  onSave: (data: TCreatePlant) => void; onClose: () => void;
 }) {
   const [name, setName]               = useState(initial?.name ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
@@ -93,7 +219,6 @@ function PlantFormModal({
               <Text style={fs.closeBtnText}>✕</Text>
             </TouchableOpacity>
           </View>
-
           <ScrollView showsVerticalScrollIndicator={false}>
             <Text style={fs.label}>Название</Text>
             <TextInput
@@ -146,14 +271,14 @@ function PlantFormModal({
   );
 }
 
-// ─── Карточка растения ───────────────────────────────────────────────────────
-function PlantCard({
-  plant, onEdit, onDelete, onWater, getHistory,
-}: {
+// ══════════════════════════════════════════════════════════════════════════════
+// Карточка растения
+// ══════════════════════════════════════════════════════════════════════════════
+function PlantCard({ plant, onEdit, onDelete, onWaterRequest, getHistory }: {
   plant: TPlant;
   onEdit: (p: TPlant) => void;
   onDelete: (p: TPlant) => void;
-  onWater: (id: string) => void;
+  onWaterRequest: (p: TPlant) => void;
   getHistory: (id: string) => Promise<TCareRecord[]>;
 }) {
   const freqDays = WATER_FREQUENCY_DAYS[plant.waterFrequency];
@@ -170,13 +295,6 @@ function PlantCard({
     day: '2-digit', month: '2-digit', year: 'numeric',
   });
 
-  const handleWater = () => {
-    Alert.alert('Полив', `Отметить полив «${plant.name}»?`, [
-      { text: 'Отмена', style: 'cancel' },
-      { text: 'Полить', onPress: () => onWater(plant.id) },
-    ]);
-  };
-
   const openHistory = async () => {
     setHistoryLoading(true);
     setHistoryVisible(true);
@@ -187,8 +305,7 @@ function PlantCard({
 
   const daysLabel = days > 0
     ? `Следующий полив через ${days} дн.`
-    : days === 0
-    ? 'Полить сегодня!'
+    : days === 0 ? 'Полить сегодня!'
     : `Просрочено на ${Math.abs(days)} дн.`;
 
   const StatusIcon = WaterStatusIcon[status];
@@ -196,11 +313,8 @@ function PlantCard({
   return (
     <>
       <View style={pc.card}>
-        {/* Цветная полоска */}
         <View style={[pc.bar, { backgroundColor: color }]} />
-
         <View style={pc.body}>
-          {/* Заголовок */}
           <View style={pc.header}>
             <View style={pc.iconCircle}>
               <StatusIcon width={28} height={28} />
@@ -219,33 +333,34 @@ function PlantCard({
             </View>
           </View>
 
-          {plant.description ? (
-            <Text style={pc.description}>{plant.description}</Text>
-          ) : null}
+          {plant.description ? <Text style={pc.description}>{plant.description}</Text> : null}
 
-          {/* Статус + дата */}
           <View style={[pc.statusRow, { backgroundColor: color + '15' }]}>
             <View style={[pc.statusDot, { backgroundColor: color }]} />
             <Text style={[pc.statusLabel, { color }]}>{label}</Text>
             <Text style={pc.statusDays}>{daysLabel}</Text>
           </View>
 
-          {/* Последний полив */}
-          <Text style={pc.lastWatered}>Последний полив: {lastDate}</Text>
+          <Text style={pc.lastWatered}>💧 Последний полив: {lastDate}</Text>
 
-          {/* Кнопки */}
           <View style={pc.btnRow}>
             <Pressable style={pc.historyBtn} onPress={openHistory}>
-              <Text style={pc.historyBtnText}>История</Text>
+              <Text style={pc.historyBtnText}>📋 История</Text>
             </Pressable>
-            <Pressable style={[pc.waterBtn, { backgroundColor: color }]} onPress={handleWater}>
-              <Text style={pc.waterBtnText}>Полить</Text>
+            <Pressable
+              style={({ pressed }) => [pc.waterBtn, { backgroundColor: color }, pressed && { opacity: 0.85 }]}
+              onPress={() => onWaterRequest(plant)}
+            >
+              <View style={pc.waterBtnInner}>
+                <WateringCan width={16} height={16} />
+                <Text style={pc.waterBtnText}>Полить</Text>
+              </View>
             </Pressable>
           </View>
         </View>
       </View>
 
-      {/* История */}
+      {/* История полива */}
       <Modal visible={historyVisible} animationType="slide" transparent onRequestClose={() => setHistoryVisible(false)}>
         <View style={hm.overlay}>
           <View style={hm.sheet}>
@@ -284,7 +399,9 @@ function PlantCard({
   );
 }
 
-// ─── Главный экран ───────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// Главный экран
+// ══════════════════════════════════════════════════════════════════════════════
 export default function PlantsScreen() {
   const { user }                        = useUserStore((s) => s);
   const [plants, setPlants]             = useState<TPlant[]>([]);
@@ -293,6 +410,10 @@ export default function PlantsScreen() {
   const [familyUuid, setFamilyUuid]     = useState<string | null>(null);
   const [formVisible, setFormVisible]   = useState(false);
   const [editTarget, setEditTarget]     = useState<TPlant | null>(null);
+
+  // ── стейты для красивых модалок ──
+  const [waterTarget, setWaterTarget]   = useState<TPlant | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TPlant | null>(null);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -312,7 +433,7 @@ export default function PlantsScreen() {
         return dA - dB;
       });
       setPlants(data);
-    } catch (e) {
+    } catch {
       setError('Не удалось загрузить данные');
     } finally {
       setLoading(false);
@@ -329,36 +450,28 @@ export default function PlantsScreen() {
     await load();
   };
 
-  const handleDelete = (plant: TPlant) => {
-    Alert.alert('Удалить растение', `Удалить «${plant.name}»?`, [
-      { text: 'Отмена', style: 'cancel' },
-      { text: 'Удалить', style: 'destructive', onPress: async () => { await deletePlant(plant.id); await load(); } },
-    ]);
+  const handleWaterConfirm = async () => {
+    if (!waterTarget || !familyUuid) return;
+    await waterPlant(waterTarget.id, familyUuid);
+    await load();
   };
 
-  const handleWater = async (plantId: string) => {
-    if (!familyUuid) return;
-    await waterPlant(plantId, familyUuid);
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    await deletePlant(deleteTarget.id);
     await load();
   };
 
   const getHistory = (plantId: string) => getCareRecords(plantId);
-
-  const openAdd  = () => { setEditTarget(null); setFormVisible(true); };
-  const openEdit = (p: TPlant) => { setEditTarget(p); setFormVisible(true); };
+  const openAdd    = () => { setEditTarget(null); setFormVisible(true); };
+  const openEdit   = (p: TPlant) => { setEditTarget(p); setFormVisible(true); };
 
   return (
     <View style={s.root}>
 
+      {/* ── Шапка ── */}
       <View style={s.header}>
-        {/* Иллюстрация на весь фон шапки */}
-        <PlantsHero
-          width="100%"
-          height={160}
-          style={s.heroImage}
-          preserveAspectRatio="xMidYMid slice"
-        />
-        {/* Текст поверх иллюстрации */}
+        <PlantsHero width="100%" height={160} style={s.heroImage} preserveAspectRatio="xMidYMid slice" />
         <View style={s.headerOverlay}>
           <View style={s.headerContent}>
             <View>
@@ -373,7 +486,6 @@ export default function PlantsScreen() {
             </Pressable>
           </View>
 
-          {/* Статистика */}
           {plants.length > 0 && (
             <View style={s.stats}>
               <View style={s.statItem}>
@@ -420,29 +532,42 @@ export default function PlantsScreen() {
           </Pressable>
         </View>
       ) : (
-        <ScrollView
-          style={s.list}
-          contentContainerStyle={s.listContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView style={s.list} contentContainerStyle={s.listContent} showsVerticalScrollIndicator={false}>
           {plants.map((plant) => (
             <PlantCard
               key={plant.id}
               plant={plant}
               onEdit={openEdit}
-              onDelete={handleDelete}
-              onWater={handleWater}
+              onDelete={(p) => setDeleteTarget(p)}
+              onWaterRequest={(p) => setWaterTarget(p)}
               getHistory={getHistory}
             />
           ))}
         </ScrollView>
       )}
 
+      {/* ── Форма ── */}
       <PlantFormModal
         visible={formVisible}
         initial={editTarget}
         onSave={handleSave}
         onClose={() => setFormVisible(false)}
+      />
+
+      {/* ── Модалка полива ── */}
+      <WaterModal
+        visible={!!waterTarget}
+        plantName={waterTarget?.name ?? ''}
+        onConfirm={handleWaterConfirm}
+        onClose={() => setWaterTarget(null)}
+      />
+
+      {/* ── Модалка удаления ── */}
+      <DeleteModal
+        visible={!!deleteTarget}
+        plantName={deleteTarget?.name ?? ''}
+        onConfirm={handleDeleteConfirm}
+        onClose={() => setDeleteTarget(null)}
       />
     </View>
   );
@@ -451,38 +576,22 @@ export default function PlantsScreen() {
 // ─── Стили главного экрана ───────────────────────────────────────────────────
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.cream },
-
-  header: {
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  heroImage: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-  },
-  headerOverlay: {
-    paddingTop: 48,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: 'rgba(78,125,98,0.80)', // полупрозрачный sage поверх SVG
-  },
+  header: { position: 'relative', overflow: 'hidden' },
+  heroImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  headerOverlay: { paddingTop: 48, paddingBottom: 20, paddingHorizontal: 20, backgroundColor: 'rgba(78,125,98,0.80)' },
   headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   headerLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.65)', letterSpacing: 1, textTransform: 'uppercase' },
   headerTitle: { fontSize: 26, fontWeight: '800', color: C.white, marginTop: 2 },
-
   addBtn: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 99, paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   addBtnPressed: { backgroundColor: 'rgba(255,255,255,0.1)' },
   addBtnText: { color: C.white, fontWeight: '800', fontSize: 14 },
-
   stats: { flexDirection: 'row', alignItems: 'center', marginTop: 16, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: 12 },
   statItem: { flex: 1, alignItems: 'center' },
   statNum: { fontSize: 22, fontWeight: '800', color: C.white },
   statLabel: { fontSize: 11, color: 'rgba(255,255,255,0.65)', fontWeight: '600', marginTop: 1 },
   statDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.2)' },
-
   list: { flex: 1 },
   listContent: { padding: 16, paddingBottom: 32 },
-
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: C.charcoal, marginBottom: 6, marginTop: 8 },
