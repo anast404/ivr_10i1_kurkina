@@ -7,6 +7,7 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -31,10 +32,11 @@ const C = {
 // ══════════════════════════════════════════════════════════════════════════════
 type FamilyTab = 'create' | 'join';
 
-function FamilyModal({ visible, onClose, currentFamilyName, authUid, onSuccess }: {
+function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, authUid, onSuccess }: {
   visible: boolean;
   onClose: () => void;
   currentFamilyName: string | null;
+  currentFamilyUuid: string | null;
   authUid: string;
   onSuccess: () => void;
 }) {
@@ -95,6 +97,16 @@ function FamilyModal({ visible, onClose, currentFamilyName, authUid, onSuccess }
     }
   };
 
+  const shareText = async (text: string) => {
+    try {
+        await Share.share({
+            message: text
+        });
+    } catch (error) {
+        console.error('Error sharing:', error);
+    }
+  };
+
   // ── Если семья уже есть — показываем инфо ──
   if (currentFamilyName) {
     return (
@@ -114,6 +126,12 @@ function FamilyModal({ visible, onClose, currentFamilyName, authUid, onSuccess }
                 <Text style={fm.subtitle}>
                   Поделитесь вашим идентификатором{'\n'}с членами семьи для совместного доступа
                 </Text>
+                <Pressable
+                  style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
+                  onPress={() => shareText(`Привет! Вот идентификатор нашей семьи в приложении: ${currentFamilyUuid}\n\nИспользуй его, чтобы присоединиться к нашей семье и начать совместное использование задач, заметок и событий!`)}
+                >
+                  <Text style={fm.btnPrimaryText}>Поделиться</Text>
+                </Pressable>
                 <Pressable
                   style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
                   onPress={onClose}
@@ -301,6 +319,7 @@ export default function ProfileScreen() {
   const [name, setName]               = useState('');
   const [email, setEmail]             = useState('');
   const [familyName, setFamilyName]   = useState<string | null>(null);
+  const [familyUuid, setFamilyUuid]   = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput]     = useState('');
   const [familyModalVisible, setFamilyModalVisible] = useState(false);
@@ -312,8 +331,10 @@ export default function ProfileScreen() {
       if (value?.family_uuid) {
         const family = await getDocument('families', value.family_uuid);
         setFamilyName(family?.name ?? null);
+        setFamilyUuid(value.family_uuid);
       } else {
         setFamilyName(null);
+        setFamilyUuid(null);
       }
     });
   };
@@ -439,6 +460,7 @@ export default function ProfileScreen() {
         visible={familyModalVisible}
         onClose={() => setFamilyModalVisible(false)}
         currentFamilyName={familyName}
+        currentFamilyUuid={familyUuid}
         authUid={authUser.uid}
         onSuccess={loadUser}
       />
