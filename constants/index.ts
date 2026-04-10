@@ -4,6 +4,8 @@ import { SymbolViewProps } from "expo-symbols";
 export const ICONS: Record<string, SymbolViewProps['name']> = {
   // таблетки
   'pills': 'cross.case.fill',
+  // шопинг
+  'shopping': 'cart.fill',
   // растения
   'plants': 'camera.macro.circle.fill',
   // профиль
@@ -23,6 +25,7 @@ export const ICONS: Record<string, SymbolViewProps['name']> = {
  */
 export const ICON_MAPPING = {
   [ICONS.pills]: 'local-pharmacy',
+  [ICONS.shopping]: 'shopping-cart',
   [ICONS.plants]: 'local-florist',
   [ICONS.profile]: 'manage-accounts',
   [ICONS.edit]: 'edit',

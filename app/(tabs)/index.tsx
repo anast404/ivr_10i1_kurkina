@@ -126,18 +126,20 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
                 <Text style={fm.subtitle}>
                   Поделитесь вашим идентификатором{'\n'}с членами семьи для совместного доступа
                 </Text>
-                <Pressable
-                  style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
-                  onPress={() => shareText(`Привет! Вот идентификатор нашей семьи в приложении: ${currentFamilyUuid}\n\nИспользуй его, чтобы присоединиться к нашей семье и начать совместное использование задач, заметок и событий!`)}
-                >
-                  <Text style={fm.btnPrimaryText}>Поделиться</Text>
-                </Pressable>
-                <Pressable
-                  style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
-                  onPress={onClose}
-                >
-                  <Text style={fm.btnPrimaryText}>Понятно</Text>
-                </Pressable>
+                <View style={fm.btnRow}>
+                    <Pressable
+                      style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
+                      onPress={() => shareText(`Привет! Вот идентификатор нашей семьи в приложении: ${currentFamilyUuid}\n\nИспользуй его, чтобы присоединиться к нашей семье и начать совместное использование задач, заметок и событий!`)}
+                    >
+                      <Text style={fm.btnPrimaryText}>Поделиться</Text>
+                    </Pressable>
+                    <Pressable
+                      style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
+                      onPress={onClose}
+                    >
+                      <Text style={fm.btnPrimaryText}>Понятно</Text>
+                    </Pressable>
+                </View>
               </View>
             </Pressable>
           </Animated.View>

@@ -12,7 +12,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: !false,
+        headerShown: false,
         tabBarButton: HapticTab,
       }}>
       <Tabs.Screen
@@ -34,6 +34,13 @@ export default function TabLayout() {
         options={{
           title: 'Профиль',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name={ICONS.profile} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="shopping"
+        options={{
+          title: 'Покупки',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name={ICONS.shopping} color={color} />,
         }}
       />
     </Tabs>
