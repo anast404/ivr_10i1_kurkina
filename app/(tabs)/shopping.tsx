@@ -1,5 +1,6 @@
 import { useShoppingItems, getShoppingStatus, SHOPPING_STATUS_COLOR, SHOPPING_STATUS_LABEL, ShoppingSortKey } from '@/hooks/use-shopping';
 import { TShoppingItem, TCreateShoppingItem, ShoppingItemStatus, ShoppingFrequency, SHOPPING_FREQUENCY_LABEL } from '@/types/shopping';
+import { isValid, runValidation, shoppingValidationRules, ValidationErrors } from '@/utils/validation';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -41,7 +42,7 @@ const SORT_OPTIONS: { key: ShoppingSortKey; label: string }[] = [
 
 const FREQUENCY_OPTIONS = Object.values(ShoppingFrequency);
 
-// ── Утилита: форматировать дату ───────────────────────────────────────────
+// ── Утилиты дат ──────────────────────────────────────────────────────────────
 function fmtDate(iso?: string): string {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('ru-RU', {
@@ -172,10 +173,9 @@ function ItemForm({ visible, initial, onSave, onClose }: {
   const [frequency, setFrequency] = useState<ShoppingFrequency>(
     initial?.frequency ?? ShoppingFrequency.once,
   );
-  const [focused, setFocused]     = useState<string | null>(null);
-  const [errors, setErrors]       = useState<Record<string, string>>({});
+  const [focused, setFocused]   = useState<string | null>(null);
+  const [errors, setErrors]     = useState<ValidationErrors>({});
 
-  // Сбрасываем поля при открытии
   useEffect(() => {
     if (visible) {
       setName(initial?.name ?? '');
@@ -187,16 +187,13 @@ function ItemForm({ visible, initial, onSave, onClose }: {
     }
   }, [visible]);
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    if (!name.trim()) e.name = 'Введите название';
-    if (dateStr && !parseDate(dateStr)) e.date = 'Формат: ДД.ММ.ГГГГ';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
+  const clearError = (field: string) =>
+    setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
 
   const handleSave = () => {
-    if (!validate()) return;
+    const errs = runValidation({ name, dateStr }, shoppingValidationRules);
+    if (!isValid(errs)) { setErrors(errs); return; }
+
     onSave({
       name: name.trim(),
       category: category.trim() || undefined,
@@ -233,7 +230,7 @@ function ItemForm({ visible, initial, onSave, onClose }: {
               placeholder="Например: Молоко"
               placeholderTextColor={C.stone}
               value={name}
-              onChangeText={(v) => { setName(v); setErrors((p) => ({ ...p, name: '' })); }}
+              onChangeText={(v) => { setName(v); clearError('name'); }}
               {...inp('name')}
             />
             {errors.name ? <Text style={ff.error}>{errors.name}</Text> : null}
@@ -263,16 +260,16 @@ function ItemForm({ visible, initial, onSave, onClose }: {
             {/* Дата закупки */}
             <Text style={ff.label}>Дата закупки</Text>
             <TextInput
-              style={[ff.input, focused === 'date' && ff.inputFocused, errors.date && ff.inputError]}
+              style={[ff.input, focused === 'date' && ff.inputFocused, errors.dateStr && ff.inputError]}
               placeholder="ДД.ММ.ГГГГ"
               placeholderTextColor={C.stone}
               value={dateStr}
-              onChangeText={(v) => { setDateStr(v); setErrors((p) => ({ ...p, date: '' })); }}
+              onChangeText={(v) => { setDateStr(v); clearError('dateStr'); }}
               keyboardType="numeric"
               maxLength={10}
               {...inp('date')}
             />
-            {errors.date ? <Text style={ff.error}>{errors.date}</Text> : null}
+            {errors.dateStr ? <Text style={ff.error}>{errors.dateStr}</Text> : null}
 
             {/* Периодичность */}
             <Text style={ff.label}>Периодичность</Text>
@@ -369,7 +366,6 @@ function ShoppingCard({ item, onEdit, onDelete, onToggle }: {
     <View style={[sc.card, item.bought && sc.cardBought]}>
       <View style={[sc.accentBar, { backgroundColor: statusColor }]} />
 
-      {/* Чекбокс */}
       <Pressable
         style={[sc.checkbox, item.bought && { backgroundColor: C.green, borderColor: C.green }]}
         onPress={() => onToggle(item.id, !item.bought)}
@@ -378,7 +374,6 @@ function ShoppingCard({ item, onEdit, onDelete, onToggle }: {
       </Pressable>
 
       <View style={sc.body}>
-        {/* Верхняя строка */}
         <View style={sc.topRow}>
           <View style={sc.nameWrap}>
             <Text style={[sc.name, item.bought && sc.nameBought]}>{item.name}</Text>
@@ -404,7 +399,6 @@ function ShoppingCard({ item, onEdit, onDelete, onToggle }: {
           </View>
         </View>
 
-        {/* Нижняя строка */}
         <View style={sc.bottomRow}>
           <View style={[sc.statusBadge, { backgroundColor: statusColor + '1A' }]}>
             <View style={[sc.statusDot, { backgroundColor: statusColor }]} />
@@ -413,10 +407,10 @@ function ShoppingCard({ item, onEdit, onDelete, onToggle }: {
 
           <View style={sc.metaWrap}>
             {item.quantity ? (
-              <Text style={sc.metaText}>📦 {item.quantity}</Text>
+              <Text style={sc.metaText}> {item.quantity}</Text>
             ) : null}
             {item.buyByDate ? (
-              <Text style={sc.metaText}>📅 до {fmtDate(item.buyByDate)}</Text>
+              <Text style={sc.metaText}> до {fmtDate(item.buyByDate)}</Text>
             ) : null}
             {item.frequency !== ShoppingFrequency.once ? (
               <Text style={sc.repeatText}>🔄 {SHOPPING_FREQUENCY_LABEL[item.frequency]}</Text>
@@ -495,7 +489,6 @@ export default function ShoppingScreen() {
     setFormVisible(false);
   };
 
-  // ── Нет семьи ──
   if (!familyUuid) {
     return (
       <View style={s.root}>
@@ -533,7 +526,6 @@ export default function ShoppingScreen() {
             </Pressable>
           </View>
 
-          {/* Статистика */}
           <View style={s.stats}>
             <View style={s.statItem}>
               <Text style={s.statNum}>{pendingCount}</Text>
@@ -555,7 +547,6 @@ export default function ShoppingScreen() {
 
       {/* ── Панель управления ── */}
       <View style={s.toolbar}>
-        {/* Сортировка */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
           <View style={s.sortRow}>
             {SORT_OPTIONS.map((opt) => (
@@ -572,7 +563,6 @@ export default function ShoppingScreen() {
           </View>
         </ScrollView>
 
-        {/* Показать куплено */}
         <Pressable
           style={[s.toggleBtn, showBought && s.toggleBtnActive]}
           onPress={() => setShowBought(!showBought)}
@@ -647,68 +637,36 @@ export default function ShoppingScreen() {
 // ─── Стили главного экрана ───────────────────────────────────────────────────
 const s = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-
   header: { overflow: 'hidden' },
-  headerOverlay: {
-    paddingTop: 52, paddingBottom: 20, paddingHorizontal: 20,
-    backgroundColor: C.tealDark,
-  },
+  headerOverlay: { paddingTop: 52, paddingBottom: 20, paddingHorizontal: 20, backgroundColor: C.tealDark },
   headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 16 },
   headerLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.65)', letterSpacing: 1, textTransform: 'uppercase' },
   headerTitle: { fontSize: 26, fontWeight: '800', color: C.white, marginTop: 2 },
-
-  addBtn: {
-    backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 99,
-    paddingHorizontal: 16, paddingVertical: 9,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)',
-  },
+  addBtn: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 99, paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
   addBtnPressed: { backgroundColor: 'rgba(255,255,255,0.1)' },
   addBtnText: { color: C.white, fontWeight: '800', fontSize: 14 },
-
-  stats: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: 12,
-  },
+  stats: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: 12 },
   statItem: { flex: 1, alignItems: 'center' },
   statNum: { fontSize: 22, fontWeight: '800', color: C.white },
   statLabel: { fontSize: 11, color: 'rgba(255,255,255,0.65)', fontWeight: '600', marginTop: 1 },
   statDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.2)' },
-
-  toolbar: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 10,
-    backgroundColor: C.white,
-    borderBottomWidth: 1, borderBottomColor: '#EEF0EE',
-    gap: 8,
-  },
+  toolbar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: '#EEF0EE', gap: 8 },
   sortRow: { flexDirection: 'row', gap: 6 },
-  sortChip: {
-    borderRadius: 8, borderWidth: 1.5, borderColor: '#D8EAE7',
-    paddingHorizontal: 10, paddingVertical: 4, backgroundColor: C.white,
-  },
+  sortChip: { borderRadius: 8, borderWidth: 1.5, borderColor: '#D8EAE7', paddingHorizontal: 10, paddingVertical: 4, backgroundColor: C.white },
   sortChipActive: { backgroundColor: C.tealPale, borderColor: C.teal },
   sortChipText: { fontSize: 12, fontWeight: '700', color: C.stone },
   sortChipTextActive: { color: C.tealDark },
-
-  toggleBtn: {
-    borderRadius: 8, borderWidth: 1.5, borderColor: '#D8EAE7',
-    paddingHorizontal: 10, paddingVertical: 4,
-  },
+  toggleBtn: { borderRadius: 8, borderWidth: 1.5, borderColor: '#D8EAE7', paddingHorizontal: 10, paddingVertical: 4 },
   toggleBtnActive: { backgroundColor: C.tealPale, borderColor: C.teal },
   toggleBtnText: { fontSize: 12, fontWeight: '700', color: C.stone },
   toggleBtnTextActive: { color: C.tealDark },
-
   list: { flex: 1 },
   listContent: { padding: 16, paddingBottom: 40 },
-
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   emptyEmoji: { fontSize: 52, marginBottom: 12 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: C.charcoal, marginBottom: 6, marginTop: 8 },
   emptyText:  { fontSize: 14, color: C.stone, textAlign: 'center', lineHeight: 20, fontWeight: '600' },
-  emptyBtn: {
-    marginTop: 20, backgroundColor: C.tealDark,
-    borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12,
-  },
+  emptyBtn: { marginTop: 20, backgroundColor: C.tealDark, borderRadius: 14, paddingHorizontal: 24, paddingVertical: 12 },
   emptyBtnText: { color: C.white, fontWeight: '800', fontSize: 14 },
   errorText: { color: C.red, fontSize: 15, textAlign: 'center', fontWeight: '600' },
 });

@@ -4,6 +4,12 @@ import {
   Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { Label } from '../atom/label';
+import {
+  ValidationErrors,
+  isValid,
+  pillValidationRules,
+  runValidation,
+} from '@/utils/validation';
 
 const C = {
   skyDark:  '#4E8FAD',
@@ -25,13 +31,13 @@ type TPillFormProps = {
   onClose: () => void;
 };
 
-function formatDate(iso: string): string {
+export function formatDate(iso: string): string {
   if (!iso) return '';
   const d = new Date(iso);
   return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
 }
 
-function parseDate(str: string): string {
+export function parseDate(str: string): string {
   const parts = str.split('.');
   if (parts.length !== 3) return '';
   const [day, month, year] = parts;
@@ -45,20 +51,21 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
   const [dateInput, setDateInput] = useState(initial?.expiresAt ? formatDate(initial.expiresAt) : '');
   const [quantity, setQuantity]   = useState(initial?.quantity ?? '');
   const [focused, setFocused]     = useState<string | null>(null);
-  const [errors, setErrors]       = useState<Record<string, string>>({});
+  const [errors, setErrors]       = useState<ValidationErrors>({});
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    if (!name.trim()) e.name = 'Введите название';
-    if (!dateInput.trim()) e.date = 'Введите дату';
-    else if (!parseDate(dateInput)) e.date = 'Формат: ДД.ММ.ГГГГ';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
+  const clearError = (field: string) =>
+    setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
 
   const handleSave = () => {
-    if (!validate()) return;
-    onSave({ name: name.trim(), description: description.trim(), expiresAt: parseDate(dateInput), quantity: quantity.trim() });
+    const errs = runValidation({ name, dateInput }, pillValidationRules);
+    if (!isValid(errs)) { setErrors(errs); return; }
+
+    onSave({
+      name: name.trim(),
+      description: description.trim(),
+      expiresAt: parseDate(dateInput),
+      quantity: quantity.trim(),
+    });
     onClose();
   };
 
@@ -73,7 +80,6 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
-          {/* Ручка */}
           <View style={styles.handle} />
 
           <View style={styles.sheetHeader}>
@@ -90,7 +96,7 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
                 placeholder="Например: Парацетамол"
                 placeholderTextColor={C.stone}
                 value={name}
-                onChangeText={(v) => { setName(v); setErrors(p => ({...p, name: ''})); }}
+                onChangeText={(v) => { setName(v); clearError('name'); }}
                 onFocus={() => setFocused('name')}
                 onBlur={() => setFocused(null)}
               />
@@ -113,17 +119,17 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
 
             <Field label="Срок годности *">
               <TextInput
-                style={[styles.input, focused === 'date' && styles.inputFocused, errors.date && styles.inputError]}
+                style={[styles.input, focused === 'date' && styles.inputFocused, errors.dateInput && styles.inputError]}
                 placeholder="ДД.ММ.ГГГГ"
                 placeholderTextColor={C.stone}
                 value={dateInput}
-                onChangeText={(v) => { setDateInput(v); setErrors(p => ({...p, date: ''})); }}
+                onChangeText={(v) => { setDateInput(v); clearError('dateInput'); }}
                 keyboardType="numeric"
                 maxLength={10}
                 onFocus={() => setFocused('date')}
                 onBlur={() => setFocused(null)}
               />
-              {errors.date ? <Text style={styles.errorText}>{errors.date}</Text> : null}
+              {errors.dateInput ? <Text style={styles.errorText}>{errors.dateInput}</Text> : null}
             </Field>
 
             <Field label="Количество">
@@ -175,7 +181,6 @@ const styles = StyleSheet.create({
   sheetTitle: { fontSize: 18, fontWeight: '800', color: C.charcoal },
   closeBtn: { width: 32, height: 32, borderRadius: 99, backgroundColor: C.cream, alignItems: 'center', justifyContent: 'center' },
   closeBtnText: { fontSize: 14, color: C.stone, fontWeight: '700' },
-
   fieldWrap: { marginBottom: 16 },
   fieldLabel: { fontSize: 11, fontWeight: '800', color: C.stone, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 6 },
   input: {
@@ -188,7 +193,6 @@ const styles = StyleSheet.create({
   inputError:   { borderColor: C.error },
   multiline:    { height: 80, textAlignVertical: 'top' },
   errorText:    { fontSize: 12, fontWeight: '700', color: C.error, marginTop: 4 },
-
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 8, paddingBottom: 20 },
   btnCancel: {
     flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: 'center',

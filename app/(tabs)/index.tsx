@@ -13,6 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { familyCreateRules, familyJoinRules, isValid, runValidation } from '@/utils/validation';
 
 const C = {
   sageDark:  '#4E7D62',
@@ -66,10 +67,12 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
   }, [visible]);
 
   const handleCreate = async () => {
-    if (!nameVal.trim()) { setError('Введите название семьи'); return; }
+    const errs = runValidation({ name: nameVal }, familyCreateRules);
+    if (!isValid(errs)) { setError(errs.name); return; }
+
     setLoading(true); setError(null);
     try {
-      const familyId = authUid; // используем uid как id семьи
+      const familyId = authUid;
       await setDocument('families', familyId, { name: nameVal.trim(), createdAt: new Date().toISOString(), ownerUid: authUid });
       await updateDocument('users', authUid, { family_uuid: familyId });
       setSucc('Семья создана! 🎉');
@@ -82,7 +85,9 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
   };
 
   const handleJoin = async () => {
-    if (!uuidVal.trim()) { setError('Введите идентификатор'); return; }
+    const errs = runValidation({ uuid: uuidVal }, familyJoinRules);
+    if (!isValid(errs)) { setError(errs.uuid); return; }
+
     setLoading(true); setError(null);
     try {
       const doc = await getDocument('families', uuidVal.trim());
@@ -129,7 +134,7 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
                 <View style={fm.btnRow}>
                     <Pressable
                       style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
-                      onPress={() => shareText(`Привет! Вот идентификатор нашей семьи в приложении: ${currentFamilyUuid}\n\nИспользуй его, чтобы присоединиться к нашей семье и начать совместное использование задач, заметок и событий!`)}
+                      onPress={() => shareText(`${currentFamilyUuid}`)}
                     >
                       <Text style={fm.btnPrimaryText}>Поделиться</Text>
                     </Pressable>
