@@ -13,6 +13,7 @@ import {
 import { StyledText } from '../atom/styled-text';
 import { IconedButton } from '../atom/iconned-button';
 import { ICONS } from '@/constants';
+import { COLORS as C } from '@/styles/colors';
 
 type TPlantCardProps = {
   plant: TPlant;
@@ -68,8 +69,8 @@ export function PlantCard({ plant, onEdit, onDelete, onWater, getHistory }: TPla
           <View style={styles.header}>
             <StyledText style={styles.name}>{plant.name}</StyledText>
             <View style={styles.actions}>
-              <IconedButton iconName={ICONS.edit} onPress={() => onEdit(plant)} color="#666" />
-              <IconedButton iconName={ICONS.close} onPress={() => onDelete(plant)} color="#F44336" />
+              <IconedButton iconName={ICONS.edit} onPress={() => onEdit(plant)} color={C.gray666} />
+              <IconedButton iconName={ICONS.close} onPress={() => onDelete(plant)} color={C.redStrong} />
             </View>
           </View>
 
@@ -153,10 +154,10 @@ export function PlantCard({ plant, onEdit, onDelete, onWater, getHistory }: TPla
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: C.white,
     borderRadius: 12,
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: C.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 14,
-    color: '#666',
+    color: C.gray666,
     marginBottom: 8,
   },
   infoRow: {
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: '#888',
+    color: C.gray888,
   },
   footer: {
     flexDirection: 'row',
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
   },
   daysText: {
     fontSize: 11,
-    color: '#888',
+    color: C.gray888,
     marginTop: 2,
   },
   footerButtons: {
@@ -223,29 +224,29 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   waterBtnText: {
-    color: '#fff',
+    color: C.white,
     fontSize: 13,
     fontWeight: '600',
   },
   historyBtn: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: C.grayCcc,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   historyBtnText: {
     fontSize: 13,
-    color: '#555',
+    color: C.gray555,
   },
   // История
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: C.overlayBlack40,
   },
   historySheet: {
-    backgroundColor: '#fff',
+    backgroundColor: C.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 20,
@@ -264,13 +265,13 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     fontSize: 20,
-    color: '#888',
+    color: C.gray888,
     padding: 4,
   },
   historyItem: {
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: C.dividerLight,
   },
   historyDate: {
     fontSize: 14,
@@ -278,12 +279,12 @@ const styles = StyleSheet.create({
   },
   historyNote: {
     fontSize: 13,
-    color: '#888',
+    color: C.gray888,
     marginTop: 2,
   },
   emptyText: {
     textAlign: 'center',
-    color: '#888',
+    color: C.gray888,
     marginTop: 24,
   },
 });

@@ -3,6 +3,7 @@ import { TPill, TCreatePill, PillStatus } from '@/types/pill';
 import { getPills, addPill, updatePill, deletePill } from '@/utils/pills-store';
 import { getDocument } from '@/utils/firebase-store';
 import useUserStore from '@/state/user';
+import { COLORS } from '@/styles/colors';
 
 /** Вычислить статус лекарства по дате */
 export function getPillStatus(expiresAt: string): PillStatus {
@@ -24,9 +25,9 @@ export const PILL_STATUS_LABEL: Record<PillStatus, string> = {
 
 /** Цвета статусов */
 export const PILL_STATUS_COLOR: Record<PillStatus, string> = {
-  [PillStatus.ok]: '#4CAF50',
-  [PillStatus.expiring_soon]: '#FF9800',
-  [PillStatus.expired]: '#F44336',
+  [PillStatus.ok]: COLORS.green,
+  [PillStatus.expiring_soon]: COLORS.amber,
+  [PillStatus.expired]: COLORS.redStrong,
 };
 
 export type SortKey = 'expiresAt' | 'name' | 'status';

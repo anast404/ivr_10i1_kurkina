@@ -93,7 +93,7 @@ function DeleteModal({ visible, pillName, onConfirm, onClose }: {
 
 const dm = StyleSheet.create({
   backdrop: {
-    flex: 1, backgroundColor: 'rgba(45,58,50,0.5)',
+    flex: 1, backgroundColor: C.overlayCharcoal50,
     justifyContent: 'center', alignItems: 'center', padding: 28,
   },
   sheet: {
@@ -112,7 +112,7 @@ const dm = StyleSheet.create({
   btnRow: { flexDirection: 'row', gap: 10, width: '100%' },
   btnCancel: {
     flex: 1, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
-    backgroundColor: C.cream, borderWidth: 1.5, borderColor: '#E8E0D4',
+    backgroundColor: C.cream, borderWidth: 1.5, borderColor: C.borderWarm,
   },
   btnConfirm: {
     flex: 1.4, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
@@ -292,43 +292,43 @@ const styles = StyleSheet.create({
   heroImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   headerOverlay: {
     paddingTop: 52, paddingBottom: 16, paddingHorizontal: 16,
-    backgroundColor: 'rgba(78,143,173,0.82)',
+    backgroundColor: C.overlaySky82,
   },
   headerTop: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'center', marginBottom: 16,
   },
-  headerTitle: { fontSize: 24, fontWeight: '800', color: '#fff', letterSpacing: -0.3 },
-  headerSub:   { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '600', marginTop: 2 },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: C.white, letterSpacing: -0.3 },
+  headerSub:   { fontSize: 13, color: C.white75, fontWeight: '600', marginTop: 2 },
 
   addBtn: {
-    backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 99,
+    backgroundColor: C.white20, borderRadius: 99,
     paddingHorizontal: 16, paddingVertical: 9,
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)',
+    borderWidth: 1.5, borderColor: C.white35,
   },
-  addBtnPressed: { backgroundColor: 'rgba(255,255,255,0.35)' },
-  addBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  addBtnPressed: { backgroundColor: C.white35 },
+  addBtnText: { color: C.white, fontWeight: '800', fontSize: 14 },
 
   filterRow: { flexDirection: 'row', gap: 8, paddingBottom: 4 },
   filterChip: {
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: C.white15,
     borderRadius: 99, paddingHorizontal: 14, paddingVertical: 7,
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1.5, borderColor: C.white20,
   },
-  filterChipActive: { backgroundColor: '#fff', borderColor: '#fff' },
-  filterLabel: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.85)' },
+  filterChipActive: { backgroundColor: C.white, borderColor: C.white },
+  filterLabel: { fontSize: 13, fontWeight: '700', color: C.white85 },
   filterLabelActive: { color: C.skyDark },
 
   sortBar: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: 16, paddingVertical: 10,
     backgroundColor: C.white,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 1, borderBottomColor: C.dividerLight,
   },
   sortBarLabel: { fontSize: 12, fontWeight: '700', color: C.stone },
   sortChip: {
-    borderRadius: 8, borderWidth: 1.5, borderColor: '#E0E8E4',
+    borderRadius: 8, borderWidth: 1.5, borderColor: C.borderMuted,
     paddingHorizontal: 10, paddingVertical: 4, backgroundColor: C.white,
   },
   sortChipActive: { backgroundColor: C.skyPale, borderColor: C.sky },

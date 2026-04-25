@@ -109,7 +109,7 @@ function DeleteModal({ visible, itemName, onConfirm, onClose }: {
 
 const md = StyleSheet.create({
   backdrop: {
-    flex: 1, backgroundColor: 'rgba(45,58,50,0.5)',
+    flex: 1, backgroundColor: C.overlayCharcoal50,
     justifyContent: 'center', alignItems: 'center', padding: 28,
   },
   sheet: {
@@ -128,7 +128,7 @@ const md = StyleSheet.create({
   btnRow: { flexDirection: 'row', gap: 10, width: '100%' },
   btnCancel: {
     flex: 1, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
-    backgroundColor: C.cream, borderWidth: 1.5, borderColor: '#E8E0D4',
+    backgroundColor: C.cream, borderWidth: 1.5, borderColor: C.borderWarm,
   },
   btnConfirm: {
     flex: 1.4, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
@@ -291,19 +291,19 @@ function ItemForm({ visible, initial, onSave, onClose }: {
 }
 
 const ff = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' },
+  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: C.overlayBlack45 },
   sheet: {
     backgroundColor: C.white, borderTopLeftRadius: 28, borderTopRightRadius: 28,
     padding: 20, paddingTop: 12, maxHeight: '90%',
   },
-  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#DDE5E0', alignSelf: 'center', marginBottom: 16 },
+  handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: C.handle, alignSelf: 'center', marginBottom: 16 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   title: { fontSize: 18, fontWeight: '800', color: C.charcoal },
   closeBtn: { width: 32, height: 32, borderRadius: 99, backgroundColor: C.tealPale, alignItems: 'center', justifyContent: 'center' },
   closeBtnText: { fontSize: 14, color: C.stone, fontWeight: '700' },
   label: { fontSize: 11, fontWeight: '800', color: C.stone, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 6 },
   input: {
-    borderWidth: 1.5, borderColor: '#D8EAE7', borderRadius: 14,
+    borderWidth: 1.5, borderColor: C.borderTeal, borderRadius: 14,
     paddingHorizontal: 16, paddingVertical: 13,
     fontSize: 15, fontWeight: '600', color: C.charcoal,
     backgroundColor: C.cream, marginBottom: 16,
@@ -312,14 +312,14 @@ const ff = StyleSheet.create({
   inputError:   { borderColor: C.red },
   error: { color: C.red, fontSize: 12, fontWeight: '700', marginTop: -12, marginBottom: 12 },
   freqGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
-  freqChip: { borderRadius: 99, borderWidth: 1.5, borderColor: '#D8EAE7', paddingHorizontal: 14, paddingVertical: 7, backgroundColor: C.cream },
+  freqChip: { borderRadius: 99, borderWidth: 1.5, borderColor: C.borderTeal, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: C.cream },
   freqChipActive: { backgroundColor: C.tealDark, borderColor: C.tealDark },
   freqChipText: { fontSize: 13, fontWeight: '700', color: C.stone },
   freqChipTextActive: { color: C.white },
   btnRow: { flexDirection: 'row', gap: 10, paddingBottom: 20 },
   btnCancel: {
     flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: 'center',
-    backgroundColor: C.cream, borderWidth: 1.5, borderColor: '#E0E8E4',
+    backgroundColor: C.cream, borderWidth: 1.5, borderColor: C.borderMuted,
   },
   btnCancelText: { fontSize: 15, fontWeight: '800', color: C.stone },
   btnSave: {
@@ -515,7 +515,7 @@ export default function ShoppingScreen() {
             </View>
             <View style={s.statDivider} />
             <View style={s.statItem}>
-              <Text style={[s.statNum, overdueCount > 0 && { color: '#FFB3B3' }]}>{overdueCount}</Text>
+              <Text style={[s.statNum, overdueCount > 0 && { color: C.redSoft }]}>{overdueCount}</Text>
               <Text style={s.statLabel}>Просрочено</Text>
             </View>
             <View style={s.statDivider} />
@@ -622,23 +622,23 @@ const s = StyleSheet.create({
   header: { overflow: 'hidden' },
   headerOverlay: { paddingTop: 52, paddingBottom: 20, paddingHorizontal: 20, backgroundColor: C.tealDark },
   headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 16 },
-  headerLabel: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.65)', letterSpacing: 1, textTransform: 'uppercase' },
+  headerLabel: { fontSize: 11, fontWeight: '700', color: C.white65, letterSpacing: 1, textTransform: 'uppercase' },
   headerTitle: { fontSize: 26, fontWeight: '800', color: C.white, marginTop: 2 },
-  addBtn: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 99, paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
-  addBtnPressed: { backgroundColor: 'rgba(255,255,255,0.1)' },
+  addBtn: { backgroundColor: C.white20, borderRadius: 99, paddingHorizontal: 16, paddingVertical: 9, borderWidth: 1, borderColor: C.white30 },
+  addBtnPressed: { backgroundColor: C.white10 },
   addBtnText: { color: C.white, fontWeight: '800', fontSize: 14 },
-  stats: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 14, padding: 12 },
+  stats: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white10, borderRadius: 14, padding: 12 },
   statItem: { flex: 1, alignItems: 'center' },
   statNum: { fontSize: 22, fontWeight: '800', color: C.white },
-  statLabel: { fontSize: 11, color: 'rgba(255,255,255,0.65)', fontWeight: '600', marginTop: 1 },
-  statDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.2)' },
-  toolbar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: '#EEF0EE', gap: 8 },
+  statLabel: { fontSize: 11, color: C.white65, fontWeight: '600', marginTop: 1 },
+  statDivider: { width: 1, height: 28, backgroundColor: C.white20 },
+  toolbar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: C.borderHeader, gap: 8 },
   sortRow: { flexDirection: 'row', gap: 6 },
-  sortChip: { borderRadius: 8, borderWidth: 1.5, borderColor: '#D8EAE7', paddingHorizontal: 10, paddingVertical: 4, backgroundColor: C.white },
+  sortChip: { borderRadius: 8, borderWidth: 1.5, borderColor: C.borderTeal, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: C.white },
   sortChipActive: { backgroundColor: C.tealPale, borderColor: C.teal },
   sortChipText: { fontSize: 12, fontWeight: '700', color: C.stone },
   sortChipTextActive: { color: C.tealDark },
-  toggleBtn: { borderRadius: 8, borderWidth: 1.5, borderColor: '#D8EAE7', paddingHorizontal: 10, paddingVertical: 4 },
+  toggleBtn: { borderRadius: 8, borderWidth: 1.5, borderColor: C.borderTeal, paddingHorizontal: 10, paddingVertical: 4 },
   toggleBtnActive: { backgroundColor: C.tealPale, borderColor: C.teal },
   toggleBtnText: { fontSize: 12, fontWeight: '700', color: C.stone },
   toggleBtnTextActive: { color: C.tealDark },

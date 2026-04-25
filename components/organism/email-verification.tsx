@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: C.sageLight,
     backgroundColor: C.white,
   },
-  secondaryBtnDisabled: { borderColor: '#E0E8E4', backgroundColor: C.cream },
+  secondaryBtnDisabled: { borderColor: C.borderMuted, backgroundColor: C.cream },
   secondaryBtnPressed:  { backgroundColor: C.sagePale },
   secondaryBtnText: {
     color: C.sageDark, fontSize: 15, fontWeight: '800',

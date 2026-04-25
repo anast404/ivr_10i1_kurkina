@@ -154,7 +154,7 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' },
+  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: C.overlayBlack45 },
   sheet: {
     backgroundColor: C.white,
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   handle: {
     width: 40, height: 4, borderRadius: 2,
-    backgroundColor: '#DDE5E0',
+    backgroundColor: C.handle,
     alignSelf: 'center', marginBottom: 16,
   },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   btnRow: { flexDirection: 'row', gap: 10, marginTop: 8, paddingBottom: 20 },
   btnCancel: {
     flex: 1, borderRadius: 14, paddingVertical: 14, alignItems: 'center',
-    backgroundColor: C.cream, borderWidth: 1.5, borderColor: '#E0E8E4',
+    backgroundColor: C.cream, borderWidth: 1.5, borderColor: C.borderMuted,
   },
   btnCancelText: { fontSize: 15, fontWeight: '800', color: C.stone },
   btnSave: {

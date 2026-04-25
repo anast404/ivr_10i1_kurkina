@@ -15,6 +15,7 @@ import {
 } from '@/utils/shopping-store';
 import { getDocument } from '@/utils/firebase-store';
 import useUserStore from '@/state/user';
+import { COLORS } from '@/styles/colors';
 
 /** Вычислить статус товара */
 export function getShoppingStatus(item: TShoppingItem): ShoppingItemStatus {
@@ -32,9 +33,9 @@ export const SHOPPING_STATUS_LABEL: Record<ShoppingItemStatus, string> = {
 };
 
 export const SHOPPING_STATUS_COLOR: Record<ShoppingItemStatus, string> = {
-  [ShoppingItemStatus.pending]: '#4E8FAD',
-  [ShoppingItemStatus.bought]:  '#4CAF50',
-  [ShoppingItemStatus.overdue]: '#D95B5B',
+  [ShoppingItemStatus.pending]: COLORS.skyDark,
+  [ShoppingItemStatus.bought]:  COLORS.green,
+  [ShoppingItemStatus.overdue]: COLORS.red,
 };
 
 export type ShoppingSortKey = 'date' | 'name' | 'status' | 'category';

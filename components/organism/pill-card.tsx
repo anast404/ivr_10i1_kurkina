@@ -44,10 +44,10 @@ export function PillCard({ pill, onEdit, onDelete }: TPillCardProps) {
               <Text style={[styles.actionBtnText, { color: C.skyDark }]}>✎</Text>
             </Pressable>
             <Pressable
-              style={[styles.actionBtn, { backgroundColor: '#FDEAEA' }]}
+              style={[styles.actionBtn, { backgroundColor: C.redPale }]}
               onPress={() => onDelete(pill)}
             >
-              <Text style={[styles.actionBtnText, { color: '#D95B5B' }]}>✕</Text>
+              <Text style={[styles.actionBtnText, { color: C.red }]}>✕</Text>
             </Pressable>
           </View>
         </View>
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     backgroundColor: C.white,
     borderRadius: 16,
     marginBottom: 10,
-    shadowColor: '#2D3A32',
+    shadowColor: C.charcoal,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 10,
@@ -94,8 +94,8 @@ const styles = StyleSheet.create({
 
   topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
   nameWrap: { flex: 1, marginRight: 8 },
-  name: { fontSize: 16, fontWeight: '800', color: '#2D3A32', letterSpacing: -0.2 },
-  desc: { fontSize: 12, color: '#8A9488', fontWeight: '600', marginTop: 2 },
+  name: { fontSize: 16, fontWeight: '800', color: C.charcoal, letterSpacing: -0.2 },
+  desc: { fontSize: 12, color: C.stone, fontWeight: '600', marginTop: 2 },
 
   actions: { flexDirection: 'row', gap: 6 },
   actionBtn: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.2 },
 
   expiryWrap: { alignItems: 'flex-end', gap: 1 },
-  quantity:   { fontSize: 11, color: '#8A9488', fontWeight: '600' },
-  expiryDate: { fontSize: 12, color: '#8A9488', fontWeight: '700' },
+  quantity:   { fontSize: 11, color: C.stone, fontWeight: '600' },
+  expiryDate: { fontSize: 12, color: C.stone, fontWeight: '700' },
   daysLeft:   { fontSize: 11, fontWeight: '800' },
 });

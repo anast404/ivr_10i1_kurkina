@@ -4,6 +4,7 @@ import { getPlants, addPlant, updatePlant, deletePlant, waterPlant, getCareRecor
 import { getDocument } from '@/utils/firebase-store';
 import useUserStore from '@/state/user';
 import { TCareRecord } from '@/types/plant';
+import { COLORS } from '@/styles/colors';
 
 /** Вычислить статус полива */
 export function getWaterStatus(lastWateredAt: string, frequencyDays: number): WaterStatus {
@@ -25,9 +26,9 @@ export function daysUntilWater(lastWateredAt: string, frequencyDays: number): nu
 }
 
 export const WATER_STATUS_COLOR: Record<WaterStatus, string> = {
-  [WaterStatus.ok]: '#4CAF50',
-  [WaterStatus.due_today]: '#FF9800',
-  [WaterStatus.overdue]: '#F44336',
+  [WaterStatus.ok]: COLORS.green,
+  [WaterStatus.due_today]: COLORS.amber,
+  [WaterStatus.overdue]: COLORS.redStrong,
 };
 
 export const WATER_STATUS_LABEL: Record<WaterStatus, string> = {

@@ -1,4 +1,5 @@
 import { Modal, ModalProps, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { COLORS as C } from '@/styles/colors';
 
 export type TStyledAlert = ModalProps & {
   title?: string,
@@ -37,15 +38,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: C.overlayBlack50,
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: C.white,
     borderRadius: 10,
     padding: 35,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: C.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -64,13 +65,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   closeButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: C.bluePrimary,
     borderRadius: 5,
     padding: 10,
     elevation: 2,
   },
   textStyle: {
-    color: 'white',
+    color: C.white,
     fontWeight: 'bold',
     textAlign: 'center',
   },

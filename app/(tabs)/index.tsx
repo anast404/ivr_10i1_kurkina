@@ -281,12 +281,12 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
 
 const fm = StyleSheet.create({
   backdrop: {
-    flex: 1, backgroundColor: 'rgba(45,58,50,0.5)',
+    flex: 1, backgroundColor: C.overlayCharcoal50,
     justifyContent: 'center', alignItems: 'center', padding: 24,
   },
   sheet: {
     width: '100%', backgroundColor: C.white, borderRadius: 28, overflow: 'hidden',
-    shadowColor: '#2D3A32', shadowOffset: { width: 0, height: 12 },
+    shadowColor: C.charcoal, shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.18, shadowRadius: 32, elevation: 16,
   },
   topBar: { height: 5 },
@@ -301,7 +301,7 @@ const fm = StyleSheet.create({
   tab: { flex: 1, paddingVertical: 10, borderRadius: 13, alignItems: 'center' },
   tabActive: {
     backgroundColor: C.white,
-    shadowColor: '#2D3A32', shadowOffset: { width: 0, height: 2 },
+    shadowColor: C.charcoal, shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08, shadowRadius: 6, elevation: 2,
   },
   tabText: { fontSize: 14, fontWeight: '700', color: C.stone },
@@ -310,7 +310,7 @@ const fm = StyleSheet.create({
   inputWrap: { width: '100%', marginBottom: 4 },
   inputLabel: { fontSize: 11, fontWeight: '800', color: C.stone, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 8 },
   input: {
-    borderWidth: 1.5, borderColor: '#E0EBE4', borderRadius: 14,
+    borderWidth: 1.5, borderColor: C.borderSoft, borderRadius: 14,
     paddingHorizontal: 16, paddingVertical: 13,
     fontSize: 15, fontWeight: '600', color: C.charcoal, backgroundColor: C.cream, marginBottom: 8,
   },
@@ -326,7 +326,7 @@ const fm = StyleSheet.create({
   btnRow: { flexDirection: 'row', gap: 10, width: '100%', marginTop: 8 },
   btnCancel: {
     flex: 1, borderRadius: 16, paddingVertical: 14, alignItems: 'center',
-    backgroundColor: C.cream, borderWidth: 1.5, borderColor: '#E8E0D4',
+    backgroundColor: C.cream, borderWidth: 1.5, borderColor: C.borderWarm,
   },
   btnCancelText: { fontSize: 15, fontWeight: '800', color: C.stone },
   btnPrimary: {
@@ -529,31 +529,31 @@ const styles = StyleSheet.create({
   },
   bgCircle: {
     position: 'absolute', width: 240, height: 240, borderRadius: 120,
-    backgroundColor: 'rgba(255,255,255,0.07)', top: -60, right: -60,
+    backgroundColor: C.white07, top: -60, right: -60,
   },
   avatar: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderWidth: 3, borderColor: 'rgba(255,255,255,0.5)',
+    backgroundColor: C.white20,
+    borderWidth: 3, borderColor: C.white50,
     alignItems: 'center', justifyContent: 'center', marginBottom: 14,
   },
   avatarText: { fontSize: 28, fontWeight: '800', color: C.white, letterSpacing: 1 },
 
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   nameText: { fontSize: 22, fontWeight: '800', color: C.white, letterSpacing: -0.3 },
-  editBadge: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 99, paddingHorizontal: 8, paddingVertical: 3 },
-  editBadgeText: { fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  editBadge: { backgroundColor: C.white20, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 3 },
+  editBadgeText: { fontSize: 13, color: C.white80 },
 
   nameEditRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 },
   nameInput: {
-    backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 10,
+    backgroundColor: C.white20, borderRadius: 10,
     paddingHorizontal: 14, paddingVertical: 8,
     fontSize: 18, fontWeight: '700', color: C.white, minWidth: 160,
   },
   iconBtn: { width: 34, height: 34, borderRadius: 99, backgroundColor: C.sageLight, alignItems: 'center', justifyContent: 'center' },
-  iconBtnGray: { backgroundColor: 'rgba(255,255,255,0.2)' },
+  iconBtnGray: { backgroundColor: C.white20 },
   iconBtnText: { fontSize: 15, fontWeight: '800', color: C.sageDark },
-  emailText: { fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: '600', marginTop: 2 },
+  emailText: { fontSize: 13, color: C.white65, fontWeight: '600', marginTop: 2 },
 
   section: { paddingHorizontal: 16, paddingTop: 24 },
   sectionLabel: { fontSize: 11, fontWeight: '800', color: C.stone, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 10, marginLeft: 4 },
@@ -573,15 +573,15 @@ const styles = StyleSheet.create({
   rowValue: { fontSize: 15, fontWeight: '600', color: C.charcoal, marginTop: 1 },
   rowAction: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: C.sagePale },
   rowActionText: { fontSize: 12, fontWeight: '700', color: C.sageDark },
-  divider: { height: 1, backgroundColor: '#F0F0F0', marginLeft: 48 },
+  divider: { height: 1, backgroundColor: C.dividerLight, marginLeft: 48 },
 
   footer: { padding: 16, paddingBottom: 32 },
   signOutBtn: {
     backgroundColor: C.white, borderRadius: 16, paddingVertical: 15,
-    alignItems: 'center', borderWidth: 1.5, borderColor: '#F0E8E8',
+    alignItems: 'center', borderWidth: 1.5, borderColor: C.dividerRose,
     shadowColor: C.error, shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
   },
-  signOutBtnPressed: { backgroundColor: C.errorPale, borderColor: '#F5C6C6' },
+  signOutBtnPressed: { backgroundColor: C.errorPale, borderColor: C.borderDanger },
   signOutText: { fontSize: 15, fontWeight: '800', color: C.error, letterSpacing: 0.2 },
 });

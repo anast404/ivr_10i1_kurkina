@@ -12,6 +12,7 @@ import { StyledText } from '../atom/styled-text';
 import { StyledTextInput } from '../atom/styled-text-input';
 import { Label } from '../atom/label';
 import { isValid, plantValidationRules, runValidation } from '@/utils/validation';
+import { COLORS as C } from '@/styles/colors';
 
 type TPlantFormProps = {
   visible: boolean;
@@ -97,7 +98,7 @@ export function PlantForm({ visible, initial, onSave, onClose }: TPlantFormProps
             </View>
 
             <View style={styles.buttons}>
-              <Button title="Отмена" onPress={onClose} color="#888" />
+              <Button title="Отмена" onPress={onClose} color={C.gray888} />
               <Button title="Сохранить" onPress={handleSave} />
             </View>
           </ScrollView>
@@ -108,19 +109,19 @@ export function PlantForm({ visible, initial, onSave, onClose }: TPlantFormProps
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
-  sheet: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },
+  overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: C.overlayBlack40 },
+  sheet: { backgroundColor: C.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   title: { fontSize: 18, fontWeight: '700' },
-  closeBtn: { fontSize: 20, color: '#888', padding: 4 },
+  closeBtn: { fontSize: 20, color: C.gray888, padding: 4 },
   input: { marginTop: 4, marginBottom: 12 },
-  inputError: { borderColor: '#F44336' },
+  inputError: { borderColor: C.redStrong },
   multiline: { height: 72, textAlignVertical: 'top' },
-  error: { color: '#F44336', fontSize: 12, marginTop: -8, marginBottom: 8 },
+  error: { color: C.redStrong, fontSize: 12, marginTop: -8, marginBottom: 8 },
   frequencyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4, marginBottom: 16 },
-  freqChip: { borderRadius: 16, borderWidth: 1, borderColor: '#ccc', paddingHorizontal: 12, paddingVertical: 6 },
-  freqChipActive: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
-  freqChipText: { fontSize: 13, color: '#444' },
-  freqChipTextActive: { color: '#fff', fontWeight: '600' },
+  freqChip: { borderRadius: 16, borderWidth: 1, borderColor: C.grayCcc, paddingHorizontal: 12, paddingVertical: 6 },
+  freqChipActive: { backgroundColor: C.green, borderColor: C.green },
+  freqChipText: { fontSize: 13, color: C.gray444 },
+  freqChipTextActive: { color: C.white, fontWeight: '600' },
   buttons: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 8, paddingBottom: 16 },
 });
