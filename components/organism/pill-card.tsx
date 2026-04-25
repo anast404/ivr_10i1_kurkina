@@ -1,15 +1,7 @@
 import { TPill } from '@/types/pill';
 import { getPillStatus, PILL_STATUS_COLOR, PILL_STATUS_LABEL } from '@/hooks/use-pills';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-
-const C = {
-  skyDark:  '#4E8FAD',
-  skyPale:  '#EBF4FF',
-  charcoal: '#2D3A32',
-  stone:    '#8A9488',
-  white:    '#FFFFFF',
-  bg:       '#F2F7FA',
-};
+import { COLORS as C } from '@/styles/colors';
 
 type TPillCardProps = {
   pill: TPill;

@@ -12,22 +12,7 @@ import {
   Text,
   View,
 } from 'react-native';
-
-// ─── Палитра (sage, как в профиле) ─────────────────────────────────────────
-const C = {
-  sageDark:  '#4E7D62',
-  sage:      '#7BAF8E',
-  sageLight: '#B2D4BC',
-  sagePale:  '#EEF7F1',
-  cream:     '#FAF6EF',
-  warm:      '#F0E8D8',
-  charcoal:  '#2D3A32',
-  stone:     '#8A9488',
-  white:     '#FFFFFF',
-  error:     '#D95B5B',
-  errorPale: '#FDEAEA',
-  successPale: '#E6F6ED',
-};
+import { COLORS as C } from '@/styles/colors';
 
 const RESEND_COOLDOWN_SEC = 60;
 

@@ -13,25 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-
-// ─── Палитра ────────────────────────────────────────────────────────────────
-const C = {
-  teal:      '#4E9E8F',
-  tealDark:  '#2D7A6C',
-  tealLight: '#A8D5CE',
-  tealPale:  '#E8F6F4',
-  cream:     '#FAF6EF',
-  charcoal:  '#2D3A32',
-  stone:     '#8A9488',
-  white:     '#FFFFFF',
-  red:       '#D95B5B',
-  redPale:   '#FDEAEA',
-  green:     '#4CAF50',
-  greenPale: '#E8F5E9',
-  orange:    '#E8973A',
-  orangePale:'#FFF3E0',
-  bg:        '#F2FAF8',
-};
+import { COLORS as C } from '@/styles/colors';
 
 const SORT_OPTIONS: { key: ShoppingSortKey; label: string }[] = [
   { key: 'date',     label: 'По дате' },
@@ -636,7 +618,7 @@ export default function ShoppingScreen() {
 
 // ─── Стили главного экрана ───────────────────────────────────────────────────
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg },
+  root: { flex: 1, backgroundColor: C.bgShopping },
   header: { overflow: 'hidden' },
   headerOverlay: { paddingTop: 52, paddingBottom: 20, paddingHorizontal: 20, backgroundColor: C.tealDark },
   headerContent: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 16 },

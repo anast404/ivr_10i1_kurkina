@@ -29,24 +29,7 @@ import { getCareRecords, waterPlant } from '@/utils/plants-store';
 import { getDocument } from '@/utils/firebase-store';
 import useUserStore from '@/state/user';
 import { getPlants, addPlant, updatePlant, deletePlant } from '@/utils/plants-store';
-
-// ─── Палитра ────────────────────────────────────────────────────────────────
-const C = {
-  sageDark:   '#4E7D62',
-  sage:       '#7BAF8E',
-  sageLight:  '#B2D4BC',
-  sagePale:   '#EEF7F1',
-  cream:      '#FAF6EF',
-  charcoal:   '#2D3A32',
-  stone:      '#8A9488',
-  white:      '#FFFFFF',
-  red:        '#D95B5B',
-  redPale:    '#FDEAEA',
-  orange:     '#E8973A',
-  sky:        '#7AAFC9',
-  skyDark:    '#4E8FAD',
-  skyPale:    '#EBF4FF',
-};
+import { COLORS as C } from '@/styles/colors';
 
 const FREQUENCY_OPTIONS = Object.values(WaterFrequency);
 

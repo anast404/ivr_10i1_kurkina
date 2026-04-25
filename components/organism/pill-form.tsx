@@ -10,19 +10,7 @@ import {
   pillValidationRules,
   runValidation,
 } from '@/utils/validation';
-
-const C = {
-  skyDark:  '#4E8FAD',
-  sky:      '#7AAFC9',
-  skyPale:  '#EBF4FF',
-  cream:    '#FAF6EF',
-  charcoal: '#2D3A32',
-  stone:    '#8A9488',
-  white:    '#FFFFFF',
-  error:    '#D95B5B',
-  errorPale:'#FDEAEA',
-  border:   '#E0EBF0',
-};
+import { COLORS as C } from '@/styles/colors';
 
 type TPillFormProps = {
   visible: boolean;

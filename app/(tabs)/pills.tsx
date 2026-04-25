@@ -13,25 +13,11 @@ import {
 } from 'react-native';
 import { PillCard } from '@/components/organism/pill-card';
 import { PillForm } from '@/components/organism/pill-form';
+import { COLORS as C } from '@/styles/colors';
 
 // ─── SVG иллюстрации ────────────────────────────────────────────────────────
 import PillsHero  from '@/assets/images/pills-hero.svg';
 import PillsEmpty from '@/assets/images/pills-empty.svg';
-
-const C = {
-  sky:       '#7AAFC9',
-  skyDark:   '#4E8FAD',
-  skyPale:   '#EBF4FF',
-  cream:     '#FAF6EF',
-  charcoal:  '#2D3A32',
-  stone:     '#8A9488',
-  white:     '#FFFFFF',
-  red:       '#D95B5B',
-  redPale:   '#FDEAEA',
-  orange:    '#E8973A',
-  green:     '#5BA86A',
-  bg:        '#F2F7FA',
-};
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'expiresAt', label: 'По сроку' },
@@ -300,7 +286,7 @@ export default function PillsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg },
+  root: { flex: 1, backgroundColor: C.bgPlants },
 
   header: { position: 'relative', overflow: 'hidden' },
   heroImage: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
