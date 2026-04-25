@@ -2,14 +2,11 @@ import useUserStore from "@/state/user";
 import {
   signOut as authSignOut,
   createUserWithEmailAndPassword,
-  onAuthStateChanged,
   reload,
   sendEmailVerification,
-  signInWithEmailAndPassword,
+  signInWithEmailAndPassword
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { useEffect } from "react";
-import { auth, db } from "../firebaseConfig";
+import { auth } from "../firebaseConfig";
 
 export function useFirebaseAuth() {
   const { user, setUser } = useUserStore((state) => state);
@@ -79,27 +76,27 @@ export function useFirebaseAuth() {
     return false;
   };
 
-  useEffect(() => {
-    const subscriber = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
+  // useEffect(() => {
+  //   const subscriber = onAuthStateChanged(auth, async (user) => {
+  //     if (user) {
+  //       const userDocRef = doc(db, "users", user.uid);
+  //       const userDocSnap = await getDoc(userDocRef);
 
-        if (!userDocSnap.exists()) {
-          await setDoc(userDocRef, {
-            name: user.email,
-            email: user.email,
-            createdAt: new Date(),
-          })
-            .then(() => console.log("Профиль пользователя создан!"))
-            .catch((error) => console.error("Ошибка при создании профиля:", error));
-        }
+  //       if (!userDocSnap.exists()) {
+  //         await setDoc(userDocRef, {
+  //           name: user.email,
+  //           email: user.email,
+  //           createdAt: new Date(),
+  //         })
+  //           .then(() => console.log("Профиль пользователя создан!"))
+  //           .catch((error) => console.error("Ошибка при создании профиля:", error));
+  //       }
 
-        setUser(user);
-      }
-    });
-    return subscriber;
-  }, []);
+  //       setUser(user);
+  //     }
+  //   });
+  //   return subscriber;
+  // }, []);
 
   return {
     user,

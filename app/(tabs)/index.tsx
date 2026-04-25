@@ -1,7 +1,11 @@
+import api from '@/api';
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
-import { TEditableUser } from '@/types';
-import { getDocument, setDocument, updateDocument } from '@/utils/firebase-store';
-import { useEffect, useRef, useState } from 'react';
+import useUserStore from '@/state/user';
+import { getDocument, updateDocument } from '@/utils/firebase-store';
+import logout from '@/utils/logout';
+import { familyCreateRules, familyJoinRules, isValid, runValidation } from '@/utils/validation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Modal,
@@ -13,18 +17,17 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { familyCreateRules, familyJoinRules, isValid, runValidation } from '@/utils/validation';
 
 const C = {
-  sageDark:  '#4E7D62',
-  sage:      '#7BAF8E',
+  sageDark: '#4E7D62',
+  sage: '#7BAF8E',
   sageLight: '#B2D4BC',
-  sagePale:  '#EEF7F1',
-  cream:     '#FAF6EF',
-  charcoal:  '#2D3A32',
-  stone:     '#8A9488',
-  white:     '#FFFFFF',
-  error:     '#D95B5B',
+  sagePale: '#EEF7F1',
+  cream: '#FAF6EF',
+  charcoal: '#2D3A32',
+  stone: '#8A9488',
+  white: '#FFFFFF',
+  error: '#D95B5B',
   errorPale: '#FDEAEA',
 };
 
@@ -41,21 +44,52 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
   authUid: string;
   onSuccess: () => void;
 }) {
-  const [tab, setTab]         = useState<FamilyTab>('create');
+  const [tab, setTab] = useState<FamilyTab>('create');
   const [nameVal, setNameVal] = useState('');
   const [uuidVal, setUuidVal] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setError]  = useState<string | null>(null);
+  const [errorMsg, setError] = useState<string | null>(null);
   const [successMsg, setSucc] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
 
-  const scale   = useRef(new Animated.Value(0.94)).current;
+  const { user } = useUserStore((state) => state);
+
+  const queryClient = useQueryClient();
+
+  const familyQuery = useQuery({
+    queryKey: ['getFamily'],
+    queryFn: () => api.get(`/family/get/id=$user?.family_id}`),
+    enabled: !!user?.family_id,
+  });
+
+  const createFamilyMutation = useMutation({
+    mutationFn: (data: { name: string }) => {
+      return api.post('/family/create', data);
+    },
+    onSuccess: (data) => {
+      //todo: инвалидировать запросы где есть семья
+      queryClient.invalidateQueries({ queryKey: ['getFamily'] });
+      setSucc('Семья создана! 🎉');
+    },
+    onError: (err) => {
+      //todo: toast
+      console.log({ err })
+      setError('Не удалось создать семью');
+    }
+  });
+
+  // const isLoading = useMemo(() =>
+  //   createFamilyMutation.isPending || familyQuery.isFetching,
+  //   [createFamilyMutation.isPending, familyQuery.isFetching]
+  // );
+
+  const scale = useRef(new Animated.Value(0.94)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.spring(scale,   { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 260 }),
+        Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 260 }),
         Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
       ]).start();
     } else {
@@ -70,18 +104,20 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
     const errs = runValidation({ name: nameVal }, familyCreateRules);
     if (!isValid(errs)) { setError(errs.name); return; }
 
-    setLoading(true); setError(null);
-    try {
-      const familyId = authUid;
-      await setDocument('families', familyId, { name: nameVal.trim(), createdAt: new Date().toISOString(), ownerUid: authUid });
-      await updateDocument('users', authUid, { family_uuid: familyId });
-      setSucc('Семья создана! 🎉');
-      setTimeout(() => { onSuccess(); onClose(); }, 1200);
-    } catch {
-      setError('Не удалось создать семью');
-    } finally {
-      setLoading(false);
-    }
+    createFamilyMutation.mutate({ name: nameVal.trim() })
+
+    // setLoading(true); setError(null);
+    // try {
+    //   const familyId = authUid;
+    //   await setDocument('families', familyId, { name: nameVal.trim(), createdAt: new Date().toISOString(), ownerUid: authUid });
+    //   await updateDocument('users', authUid, { family_uuid: familyId });
+    //   setSucc('Семья создана! 🎉');
+    //   setTimeout(() => { onSuccess(); onClose(); }, 1200);
+    // } catch {
+    //   setError('Не удалось создать семью');
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const handleJoin = async () => {
@@ -104,11 +140,11 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
 
   const shareText = async (text: string) => {
     try {
-        await Share.share({
-            message: text
-        });
+      await Share.share({
+        message: text
+      });
     } catch (error) {
-        console.error('Error sharing:', error);
+      console.error('Error sharing:', error);
     }
   };
 
@@ -118,7 +154,7 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
       <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
         <Pressable style={fm.backdrop} onPress={onClose}>
           <Animated.View style={[fm.sheet, { opacity, transform: [{ scale }] }]}>
-            <Pressable onPress={() => {}}>
+            <Pressable onPress={() => { }}>
               <View style={[fm.topBar, { backgroundColor: C.sageDark }]} />
               <View style={fm.body}>
                 <View style={[fm.iconWrap, { backgroundColor: C.sagePale }]}>
@@ -132,18 +168,18 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
                   Поделитесь вашим идентификатором{'\n'}с членами семьи для совместного доступа
                 </Text>
                 <View style={fm.btnRow}>
-                    <Pressable
-                      style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
-                      onPress={() => shareText(`${currentFamilyUuid}`)}
-                    >
-                      <Text style={fm.btnPrimaryText}>Поделиться</Text>
-                    </Pressable>
-                    <Pressable
-                      style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
-                      onPress={onClose}
-                    >
-                      <Text style={fm.btnPrimaryText}>Понятно</Text>
-                    </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
+                    onPress={() => shareText(`${currentFamilyUuid}`)}
+                  >
+                    <Text style={fm.btnPrimaryText}>Поделиться</Text>
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
+                    onPress={onClose}
+                  >
+                    <Text style={fm.btnPrimaryText}>Понятно</Text>
+                  </Pressable>
                 </View>
               </View>
             </Pressable>
@@ -158,7 +194,7 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <Pressable style={fm.backdrop} onPress={onClose}>
         <Animated.View style={[fm.sheet, { opacity, transform: [{ scale }] }]}>
-          <Pressable onPress={() => {}}>
+          <Pressable onPress={() => { }}>
             <View style={[fm.topBar, { backgroundColor: C.sageDark }]} />
             <View style={fm.body}>
 
@@ -323,18 +359,37 @@ const fm = StyleSheet.create({
 export default function ProfileScreen() {
   const { user: authUser, signOut } = useFirebaseAuth();
 
-  const [name, setName]               = useState('');
-  const [email, setEmail]             = useState('');
-  const [familyName, setFamilyName]   = useState<string | null>(null);
-  const [familyUuid, setFamilyUuid]   = useState<string | null>(null);
+  const [familyName, setFamilyName] = useState<string | null>(null);
+  const [familyUuid, setFamilyUuid] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput]     = useState('');
+  const [nameInput, setNameInput] = useState('');
   const [familyModalVisible, setFamilyModalVisible] = useState(false);
+
+  const { user } = useUserStore();
+  const name = useMemo(() => user?.name ?? "", [user])
+  const email = useMemo(() => user?.email ?? "", [user])
+
+  const queryClient = useQueryClient();
+
+  const updateUserMutation = useMutation({
+    mutationFn: (data: { name: string }) => {
+      return api.put('/user/update', data);
+    },
+    onSuccess: (data) => {
+      //todo: toast
+      console.log({data, dd: data?.data})
+      queryClient.invalidateQueries({ queryKey: ['getUser'] });
+    },
+    onError: (err) => {
+      //todo: toast
+      console.log({ err })
+    }
+  });
 
   const loadUser = () => {
     getDocument('users', authUser.uid).then(async (value) => {
-      setName(value?.name ?? '');
-      setEmail(value?.email ?? '');
+      // setName(value?.name ?? '');
+      // setEmail(value?.email ?? '');
       if (value?.family_uuid) {
         const family = await getDocument('families', value.family_uuid);
         setFamilyName(family?.name ?? null);
@@ -346,17 +401,16 @@ export default function ProfileScreen() {
     });
   };
 
-  useEffect(() => { loadUser(); }, []);
+  // useEffect(() => { loadUser(); }, []);
 
-  const startEdit  = () => { setNameInput(name); setEditingName(true); };
+  const startEdit = () => { setNameInput(name); setEditingName(true); };
   const cancelEdit = () => setEditingName(false);
 
   const saveName = async () => {
     if (nameInput.trim() && nameInput !== name) {
-      const data: TEditableUser = { name: nameInput.trim() };
-      await updateDocument('users', authUser.uid, data);
-      loadUser();
+      updateUserMutation.mutate({ name: nameInput.trim() })
     }
+    
     setEditingName(false);
   };
 
@@ -456,7 +510,7 @@ export default function ProfileScreen() {
       <View style={styles.footer}>
         <Pressable
           style={({ pressed }) => [styles.signOutBtn, pressed && styles.signOutBtnPressed]}
-          onPress={signOut}
+          onPress={logout}
         >
           <Text style={styles.signOutText}>Выйти из аккаунта</Text>
         </Pressable>

@@ -1,14 +1,12 @@
-// import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { create } from "zustand";
 
 interface UserStore {
-    //todo: type ??? FirebaseAuthTypes.User | null;
-    user: any;
+    user?: { email: string, name: string, family_id: string, isVerified: boolean };
     setUser(user: any): void;
 }
 
 const useUserStore = create<UserStore>((set) => ({
-    user: null,
+    user: undefined,
     setUser: (user) => set({ user }),
 }));
 

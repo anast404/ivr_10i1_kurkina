@@ -1,4 +1,7 @@
-import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import api from '@/api';
+import useAuthStore from '@/state/auth';
+import { isValid, loginValidationRules, runValidation } from '@/utils/validation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -10,31 +13,61 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { isValid, loginValidationRules, runValidation } from '@/utils/validation';
 
 const C = {
-  sageDark:   '#4E7D62',
-  sage:       '#7BAF8E',
-  sageLight:  '#B2D4BC',
-  sagePale:   '#EEF7F1',
-  cream:      '#FAF6EF',
-  warm:       '#F0E8D8',
-  charcoal:   '#2D3A32',
-  stone:      '#8A9488',
-  white:      '#FFFFFF',
-  error:      '#D95B5B',
+  sageDark: '#4E7D62',
+  sage: '#7BAF8E',
+  sageLight: '#B2D4BC',
+  sagePale: '#EEF7F1',
+  cream: '#FAF6EF',
+  warm: '#F0E8D8',
+  charcoal: '#2D3A32',
+  stone: '#8A9488',
+  white: '#FFFFFF',
+  error: '#D95B5B',
 };
 
 type Mode = 'signIn' | 'register';
 
 export function LoginForm() {
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
-  const [mode, setMode]         = useState<Mode>('signIn');
+  const [email, setEmail] = useState('bacrilio@gmail.com');
+  const [password, setPassword] = useState('1111111');
+  const [mode, setMode] = useState<Mode>('signIn');
   const [focusedField, setFocused] = useState<string | null>(null);
-  const [error, setError]       = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const { register, signIn } = useFirebaseAuth();
+  const queryClient = useQueryClient()
+
+  const { setToken } = useAuthStore((state) => state);
+
+  const loginMutation = useMutation({
+    mutationFn: (data: { email: string, password: string }) => {
+      return api.post('/auth/login', data);
+    },
+    onSuccess: (data) => {
+      setToken(data.data.token);
+
+      queryClient.invalidateQueries({ queryKey: ['getUser'] });
+    },
+    onError: (err) => {
+      //todo: toast
+      console.log({ err })
+    }
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: (data: { email: string, password: string }) => {
+      return api.post('/auth/register', data);
+    },
+    onSuccess: (data) => {
+      //todo: toast
+      console.log({ data, dd: data?.data })
+    },
+    onError: (err) => {
+      //todo: toast
+      console.log({ err })
+    }
+  });
 
   const handleSubmit = async () => {
     setError(null);
@@ -48,9 +81,9 @@ export function LoginForm() {
 
     try {
       if (mode === 'register') {
-        await register(email, password);
+        registerMutation.mutate({ email, password });
       } else {
-        await signIn(email, password);
+        loginMutation.mutate({ email, password });
       }
     } catch {
       setError('Проверьте email и пароль');

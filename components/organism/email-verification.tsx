@@ -1,4 +1,5 @@
 import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import logout from '@/utils/logout';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -31,7 +32,7 @@ const C = {
 const RESEND_COOLDOWN_SEC = 60;
 
 export function EmailVerification() {
-  const { user, sendVerificationEmail, checkEmailVerified, signOut } = useFirebaseAuth();
+  const { user, sendVerificationEmail, checkEmailVerified } = useFirebaseAuth();
 
   const [checking, setChecking]     = useState(false);
   const [sending, setSending]       = useState(false);
@@ -210,7 +211,7 @@ export function EmailVerification() {
 
         {/* Выход */}
         {!verified && (
-          <Pressable style={styles.signOutBtn} onPress={signOut}>
+          <Pressable style={styles.signOutBtn} onPress={logout}>
             <Text style={styles.signOutText}>Выйти из аккаунта</Text>
           </Pressable>
         )}
