@@ -1,18 +1,19 @@
-import { TPlant, TCreatePlant, WaterFrequency, WATER_FREQUENCY_LABEL } from '@/types/plant';
+import { COLORS as C } from '@/styles/colors';
+import { TCreatePlant, TPlant, WATER_FREQUENCY_LABEL, WaterFrequency } from '@/types/plant';
+import { isValid, plantValidationRules, runValidation } from '@/utils/validation';
 import { useState } from 'react';
 import {
-  Modal,
-  StyleSheet,
-  View,
   Button,
+  Modal,
   ScrollView,
+  StyleSheet,
   TouchableOpacity,
+  View,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { Label } from '../atom/label';
 import { StyledText } from '../atom/styled-text';
 import { StyledTextInput } from '../atom/styled-text-input';
-import { Label } from '../atom/label';
-import { isValid, plantValidationRules, runValidation } from '@/utils/validation';
-import { COLORS as C } from '@/styles/colors';
 
 type TPlantFormProps = {
   visible: boolean;
@@ -104,6 +105,7 @@ export function PlantForm({ visible, initial, onSave, onClose }: TPlantFormProps
           </ScrollView>
         </View>
       </View>
+      <Toast />
     </Modal>
   );
 }

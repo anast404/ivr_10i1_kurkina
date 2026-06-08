@@ -1,16 +1,16 @@
-import { TPill, TCreatePill } from '@/types/pill';
-import { useState } from 'react';
-import {
-  Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
-} from 'react-native';
-import { Label } from '../atom/label';
+import { COLORS as C } from '@/styles/colors';
+import { TCreatePill, TPill } from '@/types/pill';
 import {
   ValidationErrors,
   isValid,
   pillValidationRules,
   runValidation,
 } from '@/utils/validation';
-import { COLORS as C } from '@/styles/colors';
+import { useState } from 'react';
+import {
+  Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+} from 'react-native';
+import Toast from 'react-native-toast-message';
 
 type TPillFormProps = {
   visible: boolean;
@@ -149,6 +149,7 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
           </ScrollView>
         </View>
       </View>
+      <Toast />
     </Modal>
   );
 }

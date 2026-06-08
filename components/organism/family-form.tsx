@@ -1,7 +1,6 @@
-import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import { TTabItem } from '@/types';
-import { getDocument, setDocument, updateDocument } from '@/utils/firebase-store';
-import React, { useEffect, useState } from 'react';
+import { getDocument } from '@/utils/firebase-store';
+import React, { useState } from 'react';
 import { Button, StyleSheet, View } from 'react-native';
 import { StyledText } from '../atom/styled-text';
 import { StyledTextInput } from '../atom/styled-text-input';
@@ -45,10 +44,6 @@ const AlertsConfig: Record<Alerts, Partial<TStyledAlert>> = {
 }
 
 export function FamilyForm() {
-  const {
-    user: authUser,
-  } = useFirebaseAuth();
-
   // айди семьи
   const [familyUuid, setFamilyUUID] = useState("");
   // названии семьи
@@ -68,25 +63,25 @@ export function FamilyForm() {
     })
   }
 
-  useEffect(() => {
-    getDocument("users", authUser.uid).then((value) => {
-      if(value?.family_uuid) {
-        getFamilyByUUID(value.family_uuid)
-      }
-    })
-  })
+  // useEffect(() => {
+  //   getDocument("users", authUser.uid).then((value) => {
+  //     if(value?.family_uuid) {
+  //       getFamilyByUUID(value.family_uuid)
+  //     }
+  //   })
+  // })
 
   const onCreate = async () => {
     if (familyName) {
-      await getFamilyByUUID(authUser.uid)
+      // await getFamilyByUUID(authUser.uid)
 
-      if (!familyDoc) {
-        // создать семью
-        await setDocument("family", authUser.uid, { name: familyName, createdAt: new Date() })
-      }
+      // if (!familyDoc) {
+      //   // создать семью
+      //   await setDocument("family", authUser.uid, { name: familyName, createdAt: new Date() })
+      // }
 
-      // записать айдишник в профиль
-      await updateDocument("users", authUser.uid, { family_uuid: authUser.uid })
+      // // записать айдишник в профиль
+      // await updateDocument("users", authUser.uid, { family_uuid: authUser.uid })
 
       setAlertType(Alerts.family_created)
     }
@@ -98,7 +93,7 @@ export function FamilyForm() {
 
       if (familyDoc) {
         // записать айдишник в профиль
-        await updateDocument("users", authUser.uid, { family_uuid: familyDoc.uuid })
+        // await updateDocument("users", authUser.uid, { family_uuid: familyDoc.uuid })
 
         setAlertType(Alerts.family_join)
       } else {

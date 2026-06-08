@@ -1,6 +1,7 @@
 import { EmailVerification } from '@/components/organism/email-verification';
 import { LoginForm } from '@/components/organism/login-form';
 import { Stack } from 'expo-router';
+import Toast from 'react-native-toast-message';
 
 import api from '@/api';
 import useAuthStore from '@/state/auth';
@@ -18,6 +19,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <RootLayout />
+      <Toast />
     </QueryClientProvider>
   );
 }
@@ -27,7 +29,7 @@ function RootLayout() {
   const { user, setUser } = useUserStore((state) => state);
 
   // todo: isLoading/isError
-  const {data, isSuccess} = useQuery({
+  const { data, isSuccess } = useQuery({
     queryKey: ['getUser'],
     queryFn: () => api.get(`/user`),
     enabled: !!token,

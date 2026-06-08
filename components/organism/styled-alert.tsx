@@ -1,5 +1,6 @@
-import { Modal, ModalProps, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { COLORS as C } from '@/styles/colors';
+import { Modal, ModalProps, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 export type TStyledAlert = ModalProps & {
   title?: string,
@@ -29,6 +30,7 @@ export function StyledAlert({ visible, title, message, onClose, label = 'OK', ..
           </TouchableOpacity>
         </View>
       </View>
+      <Toast />
     </Modal>
   );
 };

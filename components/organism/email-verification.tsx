@@ -1,5 +1,5 @@
-import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
-import logout from '@/utils/logout';
+import { COLORS as C } from '@/styles/colors';
+import logout from '@/utils/auth';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,13 +12,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { COLORS as C } from '@/styles/colors';
 
 const RESEND_COOLDOWN_SEC = 60;
 
 export function EmailVerification() {
-  const { user, sendVerificationEmail, checkEmailVerified } = useFirebaseAuth();
-
   const [checking, setChecking]     = useState(false);
   const [sending, setSending]       = useState(false);
   const [verified, setVerified]     = useState(false);
@@ -41,17 +38,17 @@ export function EmailVerification() {
   }, []);
 
   // Автопроверка каждые 5 секунд
-  useEffect(() => {
-    checkTimer.current = setInterval(async () => {
-      const ok = await checkEmailVerified();
-      if (ok) {
-        clearInterval(checkTimer.current!);
-        setVerified(true);
-        // _layout.tsx автоматически перенаправит когда user.emailVerified станет true
-      }
-    }, 5000);
-    return () => { if (checkTimer.current) clearInterval(checkTimer.current); };
-  }, []);
+  // useEffect(() => {
+  //   checkTimer.current = setInterval(async () => {
+  //     const ok = await checkEmailVerified();
+  //     if (ok) {
+  //       clearInterval(checkTimer.current!);
+  //       setVerified(true);
+  //       // _layout.tsx автоматически перенаправит когда user.emailVerified станет true
+  //     }
+  //   }, 5000);
+  //   return () => { if (checkTimer.current) clearInterval(checkTimer.current); };
+  // }, []);
 
   // Таймер повторной отправки
   useEffect(() => {
@@ -71,7 +68,7 @@ export function EmailVerification() {
     setError(null);
     setSuccessMsg(null);
     try {
-      await sendVerificationEmail();
+      // await sendVerificationEmail();
       setSuccessMsg('Письмо отправлено! Проверьте почту.');
       setCooldown(RESEND_COOLDOWN_SEC);
     } catch {
@@ -84,16 +81,17 @@ export function EmailVerification() {
   const handleCheckNow = async () => {
     setChecking(true);
     setError(null);
-    const ok = await checkEmailVerified();
-    setChecking(false);
-    if (ok) {
-      setVerified(true);
-    } else {
-      setError('Почта ещё не подтверждена. Проверьте письмо.');
-    }
+    // const ok = await checkEmailVerified();
+    // setChecking(false);
+    // if (ok) {
+    //   setVerified(true);
+    // } else {
+    //   setError('Почта ещё не подтверждена. Проверьте письмо.');
+    // }
   };
 
-  const email = user?.email ?? '';
+  // const email = user?.email ?? '';
+  const email = '';
 
   return (
     <KeyboardAvoidingView

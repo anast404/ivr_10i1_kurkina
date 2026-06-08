@@ -1,7 +1,5 @@
-import { usePlants } from '@/hooks/use-plants';
-import { TPlant, TCreatePlant, WATER_FREQUENCY_DAYS, WATER_FREQUENCY_LABEL } from '@/types/plant';
-import { getWaterStatus, daysUntilWater, WATER_STATUS_COLOR, WATER_STATUS_LABEL } from '@/hooks/use-plants';
-import { TCareRecord } from '@/types/plant';
+import { daysUntilWater, getWaterStatus, WATER_STATUS_COLOR, WATER_STATUS_LABEL } from '@/hooks/use-plants';
+import { TCareRecord, TCreatePlant, TPlant, WATER_FREQUENCY_DAYS, WATER_FREQUENCY_LABEL, WaterFrequency, WaterStatus } from '@/types/plant';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,19 +15,18 @@ import {
 } from 'react-native';
 
 // ─── SVG иллюстрации ────────────────────────────────────────────────────────
-import PlantsHero    from '@/assets/images/plants-hero.svg';
-import PlantsEmpty   from '@/assets/images/plants-empty.svg';
-import PlantOk       from '@/assets/images/plant-ok.svg';
 import PlantDueToday from '@/assets/images/plant-due-today.svg';
-import PlantOverdue  from '@/assets/images/plant-overdue.svg';
-import WateringCan   from '@/assets/images/watering-can.svg';
+import PlantOk from '@/assets/images/plant-ok.svg';
+import PlantOverdue from '@/assets/images/plant-overdue.svg';
+import PlantsEmpty from '@/assets/images/plants-empty.svg';
+import PlantsHero from '@/assets/images/plants-hero.svg';
+import WateringCan from '@/assets/images/watering-can.svg';
 
-import { WaterFrequency, WaterStatus } from '@/types/plant';
-import { getCareRecords, waterPlant } from '@/utils/plants-store';
-import { getDocument } from '@/utils/firebase-store';
 import useUserStore from '@/state/user';
-import { getPlants, addPlant, updatePlant, deletePlant } from '@/utils/plants-store';
 import { COLORS as C } from '@/styles/colors';
+import { getDocument } from '@/utils/firebase-store';
+import { addPlant, deletePlant, getCareRecords, getPlants, updatePlant, waterPlant } from '@/utils/plants-store';
+import Toast from 'react-native-toast-message';
 
 const FREQUENCY_OPTIONS = Object.values(WaterFrequency);
 
@@ -67,6 +64,7 @@ function ConfirmSheet({ visible, onClose, children }: {
           <Pressable onPress={() => {}}>{children}</Pressable>
         </Animated.View>
       </Pressable>
+      <Toast />
     </Modal>
   );
 }
@@ -250,6 +248,7 @@ function PlantFormModal({ visible, initial, onSave, onClose }: {
           </ScrollView>
         </View>
       </View>
+      <Toast />
     </Modal>
   );
 }
@@ -377,6 +376,7 @@ function PlantCard({ plant, onEdit, onDelete, onWaterRequest, getHistory }: {
             )}
           </View>
         </View>
+        <Toast />
       </Modal>
     </>
   );

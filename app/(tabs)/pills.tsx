@@ -1,5 +1,8 @@
-import { usePills, PILL_STATUS_LABEL, SortKey } from '@/hooks/use-pills';
-import { PillStatus, TPill, TCreatePill } from '@/types/pill';
+import { PillCard } from '@/components/organism/pill-card';
+import { PillForm } from '@/components/organism/pill-form';
+import { SortKey, usePills } from '@/hooks/use-pills';
+import { COLORS as C } from '@/styles/colors';
+import { PillStatus, TCreatePill, TPill } from '@/types/pill';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,13 +14,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import { PillCard } from '@/components/organism/pill-card';
-import { PillForm } from '@/components/organism/pill-form';
-import { COLORS as C } from '@/styles/colors';
 
 // ─── SVG иллюстрации ────────────────────────────────────────────────────────
-import PillsHero  from '@/assets/images/pills-hero.svg';
 import PillsEmpty from '@/assets/images/pills-empty.svg';
+import PillsHero from '@/assets/images/pills-hero.svg';
+import Toast from 'react-native-toast-message';
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'expiresAt', label: 'По сроку' },
@@ -87,6 +88,7 @@ function DeleteModal({ visible, pillName, onConfirm, onClose }: {
           </Pressable>
         </Animated.View>
       </Pressable>
+      <Toast />
     </Modal>
   );
 }

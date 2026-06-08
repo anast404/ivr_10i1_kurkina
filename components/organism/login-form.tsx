@@ -1,5 +1,7 @@
 import api from '@/api';
 import useAuthStore from '@/state/auth';
+import { COLORS as C } from '@/styles/colors';
+import { getError } from '@/utils/error';
 import { isValid, loginValidationRules, runValidation } from '@/utils/validation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useState } from 'react';
@@ -13,7 +15,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { COLORS as C } from '@/styles/colors';
+import Toast from 'react-native-toast-message';
 
 type Mode = 'signIn' | 'register';
 
@@ -38,8 +40,7 @@ export function LoginForm() {
       queryClient.invalidateQueries({ queryKey: ['getUser'] });
     },
     onError: (err) => {
-      //todo: toast
-      console.log({ err })
+      Toast.show({type: 'error', text1: getError(err)})
     }
   });
 
@@ -48,12 +49,10 @@ export function LoginForm() {
       return api.post('/auth/register', data);
     },
     onSuccess: (data) => {
-      //todo: toast
-      console.log({ data, dd: data?.data })
+      Toast.show({type: 'success', text1: data?.data?.message})
     },
     onError: (err) => {
-      //todo: toast
-      console.log({ err })
+      Toast.show({type: 'error', text1: getError(err)})
     }
   });
 

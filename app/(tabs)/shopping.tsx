@@ -1,5 +1,6 @@
-import { useShoppingItems, getShoppingStatus, SHOPPING_STATUS_COLOR, SHOPPING_STATUS_LABEL, ShoppingSortKey } from '@/hooks/use-shopping';
-import { TShoppingItem, TCreateShoppingItem, ShoppingItemStatus, ShoppingFrequency, SHOPPING_FREQUENCY_LABEL } from '@/types/shopping';
+import { getShoppingStatus, SHOPPING_STATUS_COLOR, SHOPPING_STATUS_LABEL, ShoppingSortKey, useShoppingItems } from '@/hooks/use-shopping';
+import { COLORS as C } from '@/styles/colors';
+import { SHOPPING_FREQUENCY_LABEL, ShoppingFrequency, TCreateShoppingItem, TShoppingItem } from '@/types/shopping';
 import { isValid, runValidation, shoppingValidationRules, ValidationErrors } from '@/utils/validation';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -13,7 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { COLORS as C } from '@/styles/colors';
+import Toast from 'react-native-toast-message';
 
 const SORT_OPTIONS: { key: ShoppingSortKey; label: string }[] = [
   { key: 'date',     label: 'По дате' },
@@ -68,6 +69,7 @@ function AnimSheet({ visible, onClose, children }: {
           <Pressable onPress={() => {}}>{children}</Pressable>
         </Animated.View>
       </Pressable>
+      <Toast />
     </Modal>
   );
 }
@@ -286,6 +288,7 @@ function ItemForm({ visible, initial, onSave, onClose }: {
           </ScrollView>
         </View>
       </View>
+      <Toast />
     </Modal>
   );
 }

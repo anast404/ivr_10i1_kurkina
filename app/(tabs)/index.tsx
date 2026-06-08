@@ -1,75 +1,79 @@
 import api from '@/api';
-import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
 import useUserStore from '@/state/user';
-import { getDocument, updateDocument } from '@/utils/firebase-store';
-import logout from '@/utils/logout';
+import { COLORS as C } from '@/styles/colors';
+import logout from '@/utils/auth';
+import { getError } from '@/utils/error';
 import { familyCreateRules, familyJoinRules, isValid, runValidation } from '@/utils/validation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Animated,
-  Modal,
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    Animated,
+    Modal,
+    Pressable,
+    ScrollView,
+    Share,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from 'react-native';
-import { COLORS as C } from '@/styles/colors';
+import Toast from 'react-native-toast-message';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // Модалка: Создать / Присоединиться к семье
 // ══════════════════════════════════════════════════════════════════════════════
 type FamilyTab = 'create' | 'join';
 
-function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, authUid, onSuccess }: {
+function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid }: {
   visible: boolean;
   onClose: () => void;
   currentFamilyName: string | null;
   currentFamilyUuid: string | null;
-  authUid: string;
-  onSuccess: () => void;
 }) {
   const [tab, setTab] = useState<FamilyTab>('create');
   const [nameVal, setNameVal] = useState('');
   const [uuidVal, setUuidVal] = useState('');
-  const [loading, setLoading] = useState(false);
   const [errorMsg, setError] = useState<string | null>(null);
   const [successMsg, setSucc] = useState<string | null>(null);
   const [focused, setFocused] = useState<string | null>(null);
 
-  const { user } = useUserStore((state) => state);
+  // todo: закрытся с паузой чтоб успеть увидеть тост
+  // const onBlocketClose = () => {}
 
   const queryClient = useQueryClient();
-
-  const familyQuery = useQuery({
-    queryKey: ['getFamily'],
-    queryFn: () => api.get(`/family/get/id=$user?.family_id}`),
-    enabled: !!user?.family_id,
-  });
 
   const createFamilyMutation = useMutation({
     mutationFn: (data: { name: string }) => {
       return api.post('/family/create', data);
     },
     onSuccess: (data) => {
-      //todo: инвалидировать запросы где есть семья
-      queryClient.invalidateQueries({ queryKey: ['getFamily'] });
-      setSucc('Семья создана! 🎉');
+      queryClient.invalidateQueries({ queryKey: ['getUser', 'getFamily'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+      onClose();
     },
     onError: (err) => {
-      //todo: toast
-      console.log({ err })
-      setError('Не удалось создать семью');
+      Toast.show({ type: 'error', text1: getError(err) })
     }
   });
 
-  // const isLoading = useMemo(() =>
-  //   createFamilyMutation.isPending || familyQuery.isFetching,
-  //   [createFamilyMutation.isPending, familyQuery.isFetching]
-  // );
+  const updateUserFamilyIdMutation = useMutation({
+    mutationFn: (data: { family_id: string }) => {
+      return api.put('/user/update', data);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['getUser', 'getFamily'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+      onClose();
+    },
+    onError: (err) => {
+      Toast.show({ type: 'error', text1: getError(err) });
+    }
+  });
+
+  const isLoading = useMemo(() =>
+    createFamilyMutation.isPending || updateUserFamilyIdMutation.isPending,
+    [createFamilyMutation.isPending, updateUserFamilyIdMutation.isPending]
+  );
 
   const scale = useRef(new Animated.Value(0.94)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -93,37 +97,13 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
     if (!isValid(errs)) { setError(errs.name); return; }
 
     createFamilyMutation.mutate({ name: nameVal.trim() })
-
-    // setLoading(true); setError(null);
-    // try {
-    //   const familyId = authUid;
-    //   await setDocument('families', familyId, { name: nameVal.trim(), createdAt: new Date().toISOString(), ownerUid: authUid });
-    //   await updateDocument('users', authUid, { family_uuid: familyId });
-    //   setSucc('Семья создана! 🎉');
-    //   setTimeout(() => { onSuccess(); onClose(); }, 1200);
-    // } catch {
-    //   setError('Не удалось создать семью');
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   const handleJoin = async () => {
     const errs = runValidation({ uuid: uuidVal }, familyJoinRules);
     if (!isValid(errs)) { setError(errs.uuid); return; }
 
-    setLoading(true); setError(null);
-    try {
-      const doc = await getDocument('families', uuidVal.trim());
-      if (!doc) throw new Error('not found');
-      await updateDocument('users', authUid, { family_uuid: uuidVal.trim() });
-      setSucc('Вы присоединились к семье! 🏡');
-      setTimeout(() => { onSuccess(); onClose(); }, 1200);
-    } catch {
-      setError('Семья не найдена. Проверьте идентификатор.');
-    } finally {
-      setLoading(false);
-    }
+    updateUserFamilyIdMutation.mutate({ family_id: uuidVal.trim() })
   };
 
   const shareText = async (text: string) => {
@@ -131,8 +111,8 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
       await Share.share({
         message: text
       });
-    } catch (error) {
-      console.error('Error sharing:', error);
+    } catch (error: any) {
+      Toast.show({ type: 'error', text1: `Oшибка приглашения в семью: ${error?.message || JSON.stringify(error)}` })
     }
   };
 
@@ -173,6 +153,7 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
             </Pressable>
           </Animated.View>
         </Pressable>
+        <Toast />
       </Modal>
     );
   }
@@ -261,20 +242,20 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid, a
                   <Text style={fm.btnCancelText}>Отмена</Text>
                 </Pressable>
                 <Pressable
-                  style={({ pressed }) => [fm.btnPrimary, loading && { opacity: 0.55 }, pressed && { opacity: 0.85 }]}
+                  style={({ pressed }) => [fm.btnPrimary, isLoading && { opacity: 0.55 }, pressed && { opacity: 0.85 }]}
                   onPress={tab === 'create' ? handleCreate : handleJoin}
-                  disabled={loading}
+                  disabled={isLoading}
                 >
                   <Text style={fm.btnPrimaryText}>
-                    {loading ? '...' : tab === 'create' ? 'Создать' : 'Войти'}
+                    {isLoading ? '...' : tab === 'create' ? 'Создать' : 'Войти'}
                   </Text>
                 </Pressable>
               </View>
-
             </View>
           </Pressable>
         </Animated.View>
       </Pressable>
+      <Toast />
     </Modal>
   );
 }
@@ -345,10 +326,6 @@ const fm = StyleSheet.create({
 // Экран профиля
 // ══════════════════════════════════════════════════════════════════════════════
 export default function ProfileScreen() {
-  const { user: authUser, signOut } = useFirebaseAuth();
-
-  const [familyName, setFamilyName] = useState<string | null>(null);
-  const [familyUuid, setFamilyUuid] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [familyModalVisible, setFamilyModalVisible] = useState(false);
@@ -356,53 +333,43 @@ export default function ProfileScreen() {
   const { user } = useUserStore();
   const name = useMemo(() => user?.name ?? "", [user])
   const email = useMemo(() => user?.email ?? "", [user])
+  const familyId = useMemo(() => user?.family_id ?? "", [user])
 
   const queryClient = useQueryClient();
 
-  const updateUserMutation = useMutation({
+  // todo: isLoading/isError
+  const familyQuery = useQuery({
+    queryKey: ['getFamily'],
+    queryFn: () => api.get(`/family?id=${familyId}`),
+    enabled: !!familyId,
+    // enabled: false,
+  });
+
+  const familyName = useMemo(() => familyQuery?.data?.data?.name ?? "", [familyQuery])
+
+  const updateUserNameMutation = useMutation({
     mutationFn: (data: { name: string }) => {
       return api.put('/user/update', data);
     },
     onSuccess: (data) => {
-      //todo: toast
-      console.log({data, dd: data?.data})
       queryClient.invalidateQueries({ queryKey: ['getUser'] });
+      Toast.show({ type: 'success', text1: data?.data?.message })
     },
     onError: (err) => {
-      //todo: toast
-      console.log({ err })
+      Toast.show({ type: 'error', text1: getError(err) })
     }
   });
-
-  const loadUser = () => {
-    getDocument('users', authUser.uid).then(async (value) => {
-      // setName(value?.name ?? '');
-      // setEmail(value?.email ?? '');
-      if (value?.family_uuid) {
-        const family = await getDocument('families', value.family_uuid);
-        setFamilyName(family?.name ?? null);
-        setFamilyUuid(value.family_uuid);
-      } else {
-        setFamilyName(null);
-        setFamilyUuid(null);
-      }
-    });
-  };
-
-  // useEffect(() => { loadUser(); }, []);
 
   const startEdit = () => { setNameInput(name); setEditingName(true); };
   const cancelEdit = () => setEditingName(false);
 
   const saveName = async () => {
     if (nameInput.trim() && nameInput !== name) {
-      updateUserMutation.mutate({ name: nameInput.trim() })
+      updateUserNameMutation.mutate({ name: nameInput.trim() })
     }
-    
+
     setEditingName(false);
   };
-
-  if (!authUser) return null;
 
   const initials = name
     ? name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
@@ -509,9 +476,7 @@ export default function ProfileScreen() {
         visible={familyModalVisible}
         onClose={() => setFamilyModalVisible(false)}
         currentFamilyName={familyName}
-        currentFamilyUuid={familyUuid}
-        authUid={authUser.uid}
-        onSuccess={loadUser}
+        currentFamilyUuid={familyId}
       />
     </View>
   );

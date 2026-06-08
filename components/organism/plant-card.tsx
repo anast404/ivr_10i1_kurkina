@@ -1,6 +1,7 @@
-import { TPlant, WATER_FREQUENCY_DAYS, WATER_FREQUENCY_LABEL } from '@/types/plant';
-import { getWaterStatus, daysUntilWater, WATER_STATUS_COLOR, WATER_STATUS_LABEL } from '@/hooks/use-plants';
-import { TCareRecord } from '@/types/plant';
+import { ICONS } from '@/constants';
+import { daysUntilWater, getWaterStatus, WATER_STATUS_COLOR, WATER_STATUS_LABEL } from '@/hooks/use-plants';
+import { COLORS as C } from '@/styles/colors';
+import { TCareRecord, TPlant, WATER_FREQUENCY_DAYS, WATER_FREQUENCY_LABEL } from '@/types/plant';
 import { useState } from 'react';
 import {
   Alert,
@@ -10,10 +11,9 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { StyledText } from '../atom/styled-text';
+import Toast from 'react-native-toast-message';
 import { IconedButton } from '../atom/iconned-button';
-import { ICONS } from '@/constants';
-import { COLORS as C } from '@/styles/colors';
+import { StyledText } from '../atom/styled-text';
 
 type TPlantCardProps = {
   plant: TPlant;
@@ -146,6 +146,7 @@ export function PlantCard({ plant, onEdit, onDelete, onWater, getHistory }: TPla
             )}
           </View>
         </View>
+        <Toast />
       </Modal>
     </>
   );
