@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "586681241990",
+    "project_id": "happyhome-a40f6",
+    "storage_bucket": "happyhome-a40f6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:586681241990:android:79eaeaf9acc9cc60815c07",
+        "android_client_info": {
+          "package_name": "ru.anasty.HappyHome"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsvQC-Rq_EhlktoarmjOvS80G005Bxczg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
