@@ -454,7 +454,7 @@ const sc = StyleSheet.create({
 // ══════════════════════════════════════════════════════════════════════════════
 export default function ShoppingScreen() {
   const {
-    items, loading, error, familyUuid,
+    items, loading, familyUuid,
     sortKey, setSortKey,
     showBought, setShowBought,
     pendingCount, boughtCount, overdueCount,
@@ -469,8 +469,14 @@ export default function ShoppingScreen() {
   const openEdit = (item: TShoppingItem) => { setEditTarget(item); setFormVisible(true); };
 
   const handleSave = async (data: TCreateShoppingItem) => {
-    if (editTarget) await update(editTarget.id, data);
-    else await add(data);
+    if (editTarget) {
+      await update({id: editTarget.id, ...data});
+
+      setEditTarget(null);
+    } else {
+      await add(data);
+    }
+    
     setFormVisible(false);
   };
 
@@ -562,10 +568,6 @@ export default function ShoppingScreen() {
       {loading ? (
         <View style={s.centered}>
           <ActivityIndicator size="large" color={C.teal} />
-        </View>
-      ) : error ? (
-        <View style={s.centered}>
-          <Text style={s.errorText}>{error}</Text>
         </View>
       ) : items.length === 0 ? (
         <View style={s.centered}>

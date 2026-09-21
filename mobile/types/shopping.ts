@@ -35,7 +35,7 @@ export type TShoppingItem = {
   quantity?: string;        // количество ("2 кг", "1 упаковка")
   buyByDate?: string;       // ISO — желаемая дата закупки
   frequency: ShoppingFrequency;
-  bought: boolean;
+  bought?: boolean;
   boughtAt?: string;        // ISO — когда куплено
   createdAt: string;
   createdBy: string;
@@ -43,3 +43,7 @@ export type TShoppingItem = {
 };
 
 export type TCreateShoppingItem = Omit<TShoppingItem, 'id' | 'createdAt' | 'createdBy' | 'familyUuid' | 'bought' | 'boughtAt'>;
+
+export type TUpdateShoppingItem = Omit<TShoppingItem, 'createdAt' | 'createdBy' | 'familyUuid' | 'bought' | 'boughtAt'>;
+
+export type TBoughtShoppingItem = {id: string; bought: boolean;};
