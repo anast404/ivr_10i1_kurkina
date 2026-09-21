@@ -5,8 +5,9 @@ import {
   isValid,
   pillValidationRules,
   runValidation,
+  validateNumber,
 } from '@/utils/validation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
@@ -37,22 +38,29 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
   const [name, setName]           = useState(initial?.name ?? '');
   const [description, setDesc]    = useState(initial?.description ?? '');
   const [dateInput, setDateInput] = useState(initial?.expiresAt ? formatDate(initial.expiresAt) : '');
-  const [quantity, setQuantity]   = useState(initial?.quantity ?? '');
+  const [quantity, setQuantity]   = useState(String(initial?.quantity ?? ''));
   const [focused, setFocused]     = useState<string | null>(null);
   const [errors, setErrors]       = useState<ValidationErrors>({});
 
   const clearError = (field: string) =>
     setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
 
+  useEffect(() => {
+    const err = validateNumber(quantity)
+    if(err) {
+      setErrors(prev => ({...prev, 'quantity': err}))
+    }
+  }, [quantity])
+
   const handleSave = () => {
-    const errs = runValidation({ name, dateInput }, pillValidationRules);
+    const errs = runValidation({ name, dateInput, quantity }, pillValidationRules);
     if (!isValid(errs)) { setErrors(errs); return; }
 
     onSave({
       name: name.trim(),
       description: description.trim(),
       expiresAt: parseDate(dateInput),
-      quantity: quantity.trim(),
+      quantity: parseFloat(quantity),
     });
     onClose();
   };
@@ -123,13 +131,15 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
             <Field label="Количество">
               <TextInput
                 style={[styles.input, focused === 'qty' && styles.inputFocused]}
-                placeholder="Например: 10 таблеток"
+                placeholder="Например: 10"
                 placeholderTextColor={C.stone}
                 value={quantity}
-                onChangeText={setQuantity}
+                onChangeText={(v) => { setQuantity(v); clearError('quantity'); }}
+                keyboardType="numeric"
                 onFocus={() => setFocused('qty')}
                 onBlur={() => setFocused(null)}
               />
+              {errors.quantity ? <Text style={styles.errorText}>{errors.quantity}</Text> : null}
             </Field>
 
             <View style={styles.btnRow}>

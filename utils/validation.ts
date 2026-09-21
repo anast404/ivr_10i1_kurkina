@@ -46,6 +46,10 @@ export function validateDateString(value: string, required = false): string | nu
   return isNaN(date.getTime()) ? 'Формат: ДД.ММ.ГГГГ' : null;
 }
 
+export function validateNumber(value: string, message = 'Введите число'): string | null {
+  return Number.isFinite(Number(value)) ? null : message;
+}
+
 // ─── Запуск набора правил ────────────────────────────────────────────────────
 
 /**
@@ -86,9 +90,10 @@ export const loginValidationRules: ValidationRule<{ email: string; password: str
   { field: 'password', validate: validatePassword },
 ];
 
-export const pillValidationRules: ValidationRule<{ name: string; dateInput: string }>[] = [
+export const pillValidationRules: ValidationRule<{ name: string; dateInput: string; quantity: string; }>[] = [
   { field: 'name',      required: true, requiredMessage: 'Введите название' },
   { field: 'dateInput', validate: (v) => validateDateString(v, true) },
+  { field: 'quantity', validate: (v) => validateNumber(v) },
 ];
 
 export const shoppingValidationRules: ValidationRule<{ name: string; dateStr: string }>[] = [

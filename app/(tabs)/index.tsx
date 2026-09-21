@@ -7,15 +7,15 @@ import { familyCreateRules, familyJoinRules, isValid, runValidation } from '@/ut
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-    Animated,
-    Modal,
-    Pressable,
-    ScrollView,
-    Share,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  Animated,
+  Modal,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 
@@ -47,7 +47,7 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid }:
       return api.post('/family/create', data);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['getUser', 'getFamily'] });
+      queryClient.invalidateQueries({ queryKey: ['getUser'] });
       Toast.show({ type: 'success', text1: data?.data?.message });
       onClose();
     },
@@ -61,7 +61,21 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid }:
       return api.put('/user/update', data);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['getUser', 'getFamily'] });
+      queryClient.invalidateQueries({ queryKey: ['getUser'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+      onClose();
+    },
+    onError: (err) => {
+      Toast.show({ type: 'error', text1: getError(err) });
+    }
+  });
+
+  const deleteUserFamilyIdMutation = useMutation({
+    mutationFn: () => {
+      return api.delete('/user/leave-family');
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['getUser'] });
       Toast.show({ type: 'success', text1: data?.data?.message });
       onClose();
     },
@@ -71,8 +85,8 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid }:
   });
 
   const isLoading = useMemo(() =>
-    createFamilyMutation.isPending || updateUserFamilyIdMutation.isPending,
-    [createFamilyMutation.isPending, updateUserFamilyIdMutation.isPending]
+    createFamilyMutation.isPending || updateUserFamilyIdMutation.isPending || deleteUserFamilyIdMutation.isPending,
+    [createFamilyMutation.isPending, updateUserFamilyIdMutation.isPending, deleteUserFamilyIdMutation.isPending]
   );
 
   const scale = useRef(new Animated.Value(0.94)).current;
@@ -142,6 +156,14 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid }:
                   >
                     <Text style={fm.btnPrimaryText}>Поделиться</Text>
                   </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
+                    onPress={() => deleteUserFamilyIdMutation.mutate() }
+                  >
+                    <Text style={fm.btnPrimaryText}>Выйти</Text>
+                  </Pressable>
+                </View>
+                <View style={fm.btnRow}>
                   <Pressable
                     style={({ pressed }) => [fm.btnPrimary, pressed && { opacity: 0.85 }]}
                     onPress={onClose}
@@ -331,6 +353,7 @@ export default function ProfileScreen() {
   const [familyModalVisible, setFamilyModalVisible] = useState(false);
 
   const { user } = useUserStore();
+
   const name = useMemo(() => user?.name ?? "", [user])
   const email = useMemo(() => user?.email ?? "", [user])
   const familyId = useMemo(() => user?.family_id ?? "", [user])
@@ -345,7 +368,7 @@ export default function ProfileScreen() {
     // enabled: false,
   });
 
-  const familyName = useMemo(() => familyQuery?.data?.data?.name ?? "", [familyQuery])
+  const familyName = useMemo(() => (familyId && familyQuery?.data?.data?.name) ?? "", [familyId, familyQuery])
 
   const updateUserNameMutation = useMutation({
     mutationFn: (data: { name: string }) => {

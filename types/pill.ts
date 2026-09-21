@@ -11,7 +11,7 @@ export type TPill = {
   name: string;
   description?: string;       // назначение / для чего
   expiresAt: string;          // ISO-строка даты окончания срока годности
-  quantity?: string;          // количество (например "10 таблеток")
+  quantity?: number;          // количество
   createdAt: string;          // ISO-строка даты добавления
   createdBy: string;          // uid пользователя
   familyUuid: string;         // идентификатор семьи
@@ -19,3 +19,5 @@ export type TPill = {
 
 /** Тип для создания нового лекарства (без id и служебных полей) */
 export type TCreatePill = Omit<TPill, 'id' | 'createdAt' | 'createdBy' | 'familyUuid'>;
+
+export type TUpdatePill = Omit<TPill, 'createdAt' | 'createdBy' | 'familyUuid'>;

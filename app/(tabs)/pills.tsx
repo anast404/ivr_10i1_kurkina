@@ -22,15 +22,15 @@ import Toast from 'react-native-toast-message';
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'expiresAt', label: 'По сроку' },
-  { key: 'name',     label: 'По названию' },
-  { key: 'status',   label: 'По статусу' },
+  { key: 'name', label: 'По названию' },
+  { key: 'status', label: 'По статусу' },
 ];
 
 const FILTER_OPTIONS: { key: PillStatus | 'all'; label: string }[] = [
-  { key: 'all',                    label: 'Все' },
-  { key: PillStatus.expired,       label: 'Просрочено' },
+  { key: 'all', label: 'Все' },
+  { key: PillStatus.expired, label: 'Просрочено' },
   { key: PillStatus.expiring_soon, label: 'Истекает' },
-  { key: PillStatus.ok,            label: 'В порядке' },
+  { key: PillStatus.ok, label: 'В порядке' },
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -39,13 +39,13 @@ const FILTER_OPTIONS: { key: PillStatus | 'all'; label: string }[] = [
 function DeleteModal({ visible, pillName, onConfirm, onClose }: {
   visible: boolean; pillName: string; onConfirm: () => void; onClose: () => void;
 }) {
-  const scale   = useRef(new Animated.Value(0.92)).current;
+  const scale = useRef(new Animated.Value(0.92)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.spring(scale,   { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 260 }),
+        Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 260 }),
         Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
       ]).start();
     } else {
@@ -58,7 +58,7 @@ function DeleteModal({ visible, pillName, onConfirm, onClose }: {
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <Pressable style={dm.backdrop} onPress={onClose}>
         <Animated.View style={[dm.sheet, { opacity, transform: [{ scale }] }]}>
-          <Pressable onPress={() => {}}>
+          <Pressable onPress={() => { }}>
             <View style={dm.topBar} />
             <View style={dm.body}>
               <View style={dm.iconWrap}>
@@ -132,18 +132,18 @@ const dm = StyleSheet.create({
 // ══════════════════════════════════════════════════════════════════════════════
 export default function PillsScreen() {
   const {
-    pills, loading, error, familyUuid,
+    pills, loading, familyUuid,
     sortKey, setSortKey,
     filterStatus, setFilterStatus,
     add, update, remove,
   } = usePills();
 
-  const [formVisible, setFormVisible]   = useState(false);
-  const [editTarget, setEditTarget]     = useState<TPill | null>(null);
+  const [formVisible, setFormVisible] = useState(false);
+  const [editTarget, setEditTarget] = useState<TPill | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TPill | null>(null);
 
-  const openAdd  = () => { setEditTarget(null); setFormVisible(true); };
-  const openEdit = (pill: TPill) => { setEditTarget(pill); setFormVisible(true); };
+  const openAdd = () => { setEditTarget(null); setFormVisible(true); };
+  const openEdit = (pill: TPill) => { console.log(pill); setEditTarget(pill); setFormVisible(true); };
 
   const handleSave = async (data: TCreatePill) => {
     if (editTarget) await update(editTarget.id, data);
@@ -164,7 +164,7 @@ export default function PillsScreen() {
   }
 
   const expiredCount = pills.filter(p => p.expiresAt && new Date(p.expiresAt) < new Date()).length;
-  const totalCount   = pills.length;
+  const totalCount = pills.length;
 
   return (
     <View style={styles.root}>
@@ -235,10 +235,6 @@ export default function PillsScreen() {
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={C.sky} />
         </View>
-      ) : error ? (
-        <View style={styles.centered}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
       ) : pills.length === 0 ? (
         <View style={styles.centered}>
           <PillsEmpty width={160} height={160} />
@@ -269,12 +265,12 @@ export default function PillsScreen() {
       )}
 
       {/* ── Форма ── */}
-      <PillForm
+      {formVisible && <PillForm
         visible={formVisible}
         initial={editTarget}
         onSave={handleSave}
         onClose={() => setFormVisible(false)}
-      />
+      />}
 
       {/* ── Модалка удаления ── */}
       <DeleteModal
@@ -301,7 +297,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginBottom: 16,
   },
   headerTitle: { fontSize: 24, fontWeight: '800', color: C.white, letterSpacing: -0.3 },
-  headerSub:   { fontSize: 13, color: C.white75, fontWeight: '600', marginTop: 2 },
+  headerSub: { fontSize: 13, color: C.white75, fontWeight: '600', marginTop: 2 },
 
   addBtn: {
     backgroundColor: C.white20, borderRadius: 99,
@@ -343,6 +339,6 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   emptyEmoji: { fontSize: 48, marginBottom: 12 },
   emptyTitle: { fontSize: 18, fontWeight: '800', color: C.charcoal, marginBottom: 6, marginTop: 8 },
-  emptyText:  { fontSize: 14, color: C.stone, textAlign: 'center', lineHeight: 20, fontWeight: '600' },
-  errorText:  { fontSize: 14, color: C.red, textAlign: 'center', fontWeight: '700' },
+  emptyText: { fontSize: 14, color: C.stone, textAlign: 'center', lineHeight: 20, fontWeight: '600' },
+  errorText: { fontSize: 14, color: C.red, textAlign: 'center', fontWeight: '700' },
 });

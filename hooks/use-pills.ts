@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
-import { TPill, TCreatePill, PillStatus } from '@/types/pill';
-import { getPills, addPill, updatePill, deletePill } from '@/utils/pills-store';
-import { getDocument } from '@/utils/firebase-store';
+import api from '@/api';
 import useUserStore from '@/state/user';
 import { COLORS } from '@/styles/colors';
+import { PillStatus, TCreatePill, TPill, TUpdatePill } from '@/types/pill';
+import { getError } from '@/utils/error';
+// import { deletePill, updatePill } from '@/utils/pills-store';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
+import Toast from 'react-native-toast-message';
 
 /** Вычислить статус лекарства по дате */
 export function getPillStatus(expiresAt: string): PillStatus {
@@ -33,79 +36,99 @@ export const PILL_STATUS_COLOR: Record<PillStatus, string> = {
 export type SortKey = 'expiresAt' | 'name' | 'status';
 
 export function usePills() {
-  const { user } = useUserStore((s) => s);
-  const [pills, setPills] = useState<TPill[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [familyUuid, setFamilyUuid] = useState<string | null>(null);
+  const { user } = useUserStore();
+
+  const queryClient = useQueryClient();
+
+  const familyUuid = useMemo(() => user?.family_id ?? "", [user])
+
+  // const [pills, setPills] = useState<TPill[]>([]);
+
   const [sortKey, setSortKey] = useState<SortKey>('expiresAt');
   const [filterStatus, setFilterStatus] = useState<PillStatus | 'all'>('all');
 
-  // Получаем familyUuid из профиля пользователя
-  useEffect(() => {
-    if (!user?.uid) return;
-    getDocument('users', user.uid).then((data) => {
-      if (data?.family_uuid) setFamilyUuid(data.family_uuid);
-    });
-  }, [user?.uid]);
+  const { data, isPending } = useQuery({
+    queryKey: ['getPills'],
+    queryFn: () => api.get('/pill'),
+    enabled: !!familyUuid,
+  });
 
-  // Загружаем лекарства
-  const load = useCallback(async () => {
-    if (!familyUuid) {
-      console.log('familyUuid is null, skip load');
-      return;
+  const createPillMutation = useMutation({
+    mutationFn: (data: TCreatePill) => {
+      return api.post('/pill/create', data);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['getPills'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+    },
+    onError: (err) => {
+      Toast.show({ type: 'error', text1: getError(err) })
     }
-    setLoading(true);
-    setError(null);
-    try {
-      console.log('loading pills for family:', familyUuid);
-      const data = await getPills(familyUuid);
-      console.log('loaded pills:', data);
-      setPills(data);
-    } catch (e) {
-      console.log('error loading pills:', e);
-      setError('Не удалось загрузить данные');
-    } finally {
-      setLoading(false);
+  });
+
+  const updatePillMutation = useMutation({
+    mutationFn: (data: TUpdatePill) => {
+      return api.post('/pill/update', data);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['getPills'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+    },
+    onError: (err) => {
+      Toast.show({ type: 'error', text1: getError(err) })
     }
-  }, [familyUuid]);
+  });
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const deletePillMutation = useMutation({
+    mutationFn: (id: string) => {
+      return api.delete(`/pill/${id}`);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['getPills'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+    },
+    onError: (err) => {
+      Toast.show({ type: 'error', text1: getError(err) })
+    }
+  });
 
-  const add = async (data: TCreatePill) => {
-    if (!familyUuid || !user?.uid) return;
-    await addPill(data, familyUuid, user.uid);
-    await load();
+  const loading = isPending || createPillMutation.isPending || updatePillMutation.isPending
+
+  const add = (data: TCreatePill) => {
+    createPillMutation.mutate(data)
   };
 
-  const update = async (id: string, data: Partial<TCreatePill>) => {
-    await updatePill(id, data);
-    await load();
+  const update = (id: string, data: TCreatePill) => {
+    updatePillMutation.mutate({
+      ...data,
+      id,
+    })
   };
 
   const remove = async (id: string) => {
-    await deletePill(id);
-    await load();
+    deletePillMutation.mutate(id)
   };
 
-  const processedPills = pills
-    .filter((p) => filterStatus === 'all' || getPillStatus(p.expiresAt) === filterStatus)
-    .sort((a, b) => {
-      if (sortKey === 'name') return a.name.localeCompare(b.name);
-      if (sortKey === 'status') {
-        const order = [PillStatus.expired, PillStatus.expiring_soon, PillStatus.ok];
-        return order.indexOf(getPillStatus(a.expiresAt)) - order.indexOf(getPillStatus(b.expiresAt));
-      }
-      // expiresAt — по умолчанию
-      return new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime();
-    });
+  const pills = useMemo<TPill[]>(() => data?.data ?? [], [data]);
+
+  const processedPills = useMemo<TPill[]>(
+    () => pills
+      .filter((p) => filterStatus === 'all' || getPillStatus(p.expiresAt) === filterStatus)
+      .sort((a, b) => {
+        if (sortKey === 'name') return a.name.localeCompare(b.name);
+        if (sortKey === 'status') {
+          const order = [PillStatus.expired, PillStatus.expiring_soon, PillStatus.ok];
+          return order.indexOf(getPillStatus(a.expiresAt)) - order.indexOf(getPillStatus(b.expiresAt));
+        }
+        // expiresAt — по умолчанию
+        return new Date(a.expiresAt).getTime() - new Date(b.expiresAt).getTime();
+      }),
+    [pills, filterStatus, sortKey]
+  );
 
   return {
     pills: processedPills,
     loading,
-    error,
     familyUuid,
     sortKey,
     setSortKey,
@@ -114,6 +137,5 @@ export function usePills() {
     add,
     update,
     remove,
-    reload: load,
   };
 }
