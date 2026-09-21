@@ -1,7 +1,7 @@
+import { MsgResponseDto } from "@dto/index";
+import User, { IUser } from "@models/User";
 import { Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import User, { IUser } from "@models/User";
-import { MsgResponseDto } from "@dto/index";
 
 type UserHandler = (user: IUser) => Promise<void> | void;
 
@@ -30,7 +30,12 @@ async function checkAuthAndReturnUser(
     return res.status(401).json({ message: "Некорректная авторизационная информация" });
   }
 
-  await next(user);
+  try {
+    await next(user);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ message: message });
+  }
 }
 
 export default checkAuthAndReturnUser;

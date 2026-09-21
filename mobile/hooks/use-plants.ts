@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import { TPlant, TCreatePlant, WaterStatus, WATER_FREQUENCY_DAYS } from '@/types/plant';
-import { getPlants, addPlant, updatePlant, deletePlant, waterPlant, getCareRecords } from '@/utils/plants-store';
-import { getDocument } from '@/utils/firebase-store';
+import api from '@/api';
 import useUserStore from '@/state/user';
-import { TCareRecord } from '@/types/plant';
 import { COLORS } from '@/styles/colors';
+import { TCareRecord, TCreateCarePlant, TCreatePlant, TPlant, TUpdatePlant, WATER_FREQUENCY_DAYS, WaterStatus } from '@/types/plant';
+import { getError } from '@/utils/error';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import Toast from 'react-native-toast-message';
 
 /** Вычислить статус полива */
 export function getWaterStatus(lastWateredAt: string, frequencyDays: number): WaterStatus {
@@ -38,80 +39,112 @@ export const WATER_STATUS_LABEL: Record<WaterStatus, string> = {
 };
 
 export function usePlants() {
-  const { user } = useUserStore((s) => s);
-  const [plants, setPlants] = useState<TPlant[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [familyUuid, setFamilyUuid] = useState<string | null>(null);
+  const { user } = useUserStore();
 
-  useEffect(() => {
-    if (!user?.uid) return;
-    getDocument('users', user.uid).then((data) => {
-      if (data?.family_uuid) setFamilyUuid(data.family_uuid);
-    });
-  }, [user?.uid]);
+  const queryClient = useQueryClient();
 
-  const load = useCallback(async () => {
-    if (!familyUuid) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getPlants(familyUuid);
-      // сортировка: сначала те кому нужен полив
-      data.sort((a, b) => {
-        const dA = daysUntilWater(a.lastWateredAt, WATER_FREQUENCY_DAYS[a.waterFrequency]);
-        const dB = daysUntilWater(b.lastWateredAt, WATER_FREQUENCY_DAYS[b.waterFrequency]);
-        return dA - dB;
-      });
-      setPlants(data);
-    } catch (e) {
-      console.log('error loading plants:', e);
-      setError('Не удалось загрузить данные');
-    } finally {
-      setLoading(false);
+  const familyUuid = useMemo(() => user?.family_id ?? "", [user])
+
+  const { data, isPending } = useQuery({
+    queryKey: ['getPlants'],
+    queryFn: () => api.get('/plant'),
+    enabled: !!familyUuid,
+  });
+
+  const createPlantMutation = useMutation({
+    mutationFn: (data: TCreatePlant) => {
+      return api.post('/plant/create', data);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['getPlants'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+    },
+    onError: (err) => {
+      Toast.show({ type: 'error', text1: getError(err) })
     }
-  }, [familyUuid]);
+  });
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const updatePlantMutation = useMutation({
+    mutationFn: (data: TUpdatePlant) => {
+      const { id, ...body } = data
+      return api.put(`/plant/${id}`, body);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['getPlants'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+    },
+    onError: (err) => {
+      Toast.show({ type: 'error', text1: getError(err) })
+    }
+  });
 
-  const add = async (data: TCreatePlant) => {
-    if (!familyUuid || !user?.uid) return;
-    await addPlant(data, familyUuid, user.uid);
-    await load();
+  const putCareHistoryMutation = useMutation({
+    mutationFn: (data: TCreateCarePlant) => {
+      const { id, ...body } = data
+      return api.put(`/plant/${id}/care`, body);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['getPlants'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+    },
+    onError: (err) => {
+      Toast.show({ type: 'error', text1: getError(err) })
+    }
+  });
+
+  const deletePlantMutation = useMutation({
+    mutationFn: (id: string) => {
+      return api.delete(`/plant/${id}`);
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['getPlants'] });
+      Toast.show({ type: 'success', text1: data?.data?.message });
+    },
+    onError: (err) => {
+      Toast.show({ type: 'error', text1: getError(err) })
+    }
+  });
+
+  const loading = isPending || createPlantMutation.isPending || updatePlantMutation.isPending || putCareHistoryMutation.isPending || deletePlantMutation.isPending
+
+  const add = (data: TCreatePlant) => {
+    createPlantMutation.mutate(data)
   };
 
-  const update = async (id: string, data: Partial<TCreatePlant>) => {
-    await updatePlant(id, data);
-    await load();
+  const update = (data: TUpdatePlant) => {
+    updatePlantMutation.mutate(data)
   };
 
   const remove = async (id: string) => {
-    await deletePlant(id);
-    await load();
+    deletePlantMutation.mutate(id)
   };
 
-  const water = async (plantId: string, note?: string) => {
-    if (!familyUuid) return;
-    await waterPlant(plantId, familyUuid, note);
-    await load();
+  const plants = useMemo<TPlant[]>(() => {
+    const result = data?.data ?? []
+    result.sort((a: TPlant, b: TPlant) => {
+      const dA = daysUntilWater(a.lastWateredAt, WATER_FREQUENCY_DAYS[a.waterFrequency]);
+      const dB = daysUntilWater(b.lastWateredAt, WATER_FREQUENCY_DAYS[b.waterFrequency]);
+      return dA - dB;
+    });
+    return result;
+  }, [data]);
+
+  const water = async (id: string, note?: string) => {
+    putCareHistoryMutation.mutate({id, note})
   };
 
-  const getHistory = async (plantId: string): Promise<TCareRecord[]> => {
-    return getCareRecords(plantId);
+  const getHistory = (id: string): TCareRecord[] => {
+    return plants.find(e => e.id === id)?.careHistory ?? []
   };
 
   return {
     plants,
     loading,
-    error,
     familyUuid,
     add,
     update,
     remove,
     water,
     getHistory,
-    reload: load,
   };
 }

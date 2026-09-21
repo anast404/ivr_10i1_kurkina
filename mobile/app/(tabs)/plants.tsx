@@ -1,6 +1,6 @@
-import { daysUntilWater, getWaterStatus, WATER_STATUS_COLOR, WATER_STATUS_LABEL } from '@/hooks/use-plants';
+import { daysUntilWater, getWaterStatus, usePlants, WATER_STATUS_COLOR, WATER_STATUS_LABEL } from '@/hooks/use-plants';
 import { TCareRecord, TCreatePlant, TPlant, WATER_FREQUENCY_DAYS, WATER_FREQUENCY_LABEL, WaterFrequency, WaterStatus } from '@/types/plant';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -22,18 +22,15 @@ import PlantsEmpty from '@/assets/images/plants-empty.svg';
 import PlantsHero from '@/assets/images/plants-hero.svg';
 import WateringCan from '@/assets/images/watering-can.svg';
 
-import useUserStore from '@/state/user';
 import { COLORS as C } from '@/styles/colors';
-import { getDocument } from '@/utils/firebase-store';
-import { addPlant, deletePlant, getCareRecords, getPlants, updatePlant, waterPlant } from '@/utils/plants-store';
 import Toast from 'react-native-toast-message';
 
 const FREQUENCY_OPTIONS = Object.values(WaterFrequency);
 
 const WaterStatusIcon = {
-  [WaterStatus.ok]:        PlantOk,
+  [WaterStatus.ok]: PlantOk,
   [WaterStatus.due_today]: PlantDueToday,
-  [WaterStatus.overdue]:   PlantOverdue,
+  [WaterStatus.overdue]: PlantOverdue,
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -42,13 +39,13 @@ const WaterStatusIcon = {
 function ConfirmSheet({ visible, onClose, children }: {
   visible: boolean; onClose: () => void; children: React.ReactNode;
 }) {
-  const scale   = useRef(new Animated.Value(0.92)).current;
+  const scale = useRef(new Animated.Value(0.92)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (visible) {
       Animated.parallel([
-        Animated.spring(scale,   { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 260 }),
+        Animated.spring(scale, { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 260 }),
         Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
       ]).start();
     } else {
@@ -61,7 +58,7 @@ function ConfirmSheet({ visible, onClose, children }: {
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
       <Pressable style={md.backdrop} onPress={onClose}>
         <Animated.View style={[md.sheet, { opacity, transform: [{ scale }] }]}>
-          <Pressable onPress={() => {}}>{children}</Pressable>
+          <Pressable onPress={() => { }}>{children}</Pressable>
         </Animated.View>
       </Pressable>
       <Toast />
@@ -174,10 +171,10 @@ function PlantFormModal({ visible, initial, onSave, onClose }: {
   visible: boolean; initial?: TPlant | null;
   onSave: (data: TCreatePlant) => void; onClose: () => void;
 }) {
-  const [name, setName]               = useState(initial?.name ?? '');
+  const [name, setName] = useState(initial?.name ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
-  const [frequency, setFrequency]     = useState<WaterFrequency>(initial?.waterFrequency ?? WaterFrequency.weekly);
-  const [nameError, setNameError]     = useState('');
+  const [frequency, setFrequency] = useState<WaterFrequency>(initial?.waterFrequency ?? WaterFrequency.weekly);
+  const [nameError, setNameError] = useState('');
 
   const handleSave = () => {
     if (!name.trim()) { setNameError('Введите название'); return; }
@@ -261,34 +258,30 @@ function PlantCard({ plant, onEdit, onDelete, onWaterRequest, getHistory }: {
   onEdit: (p: TPlant) => void;
   onDelete: (p: TPlant) => void;
   onWaterRequest: (p: TPlant) => void;
-  getHistory: (id: string) => Promise<TCareRecord[]>;
+  getHistory: (id: string) => TCareRecord[];
 }) {
   const freqDays = WATER_FREQUENCY_DAYS[plant.waterFrequency];
-  const status   = getWaterStatus(plant.lastWateredAt, freqDays);
-  const color    = WATER_STATUS_COLOR[status];
-  const label    = WATER_STATUS_LABEL[status];
-  const days     = daysUntilWater(plant.lastWateredAt, freqDays);
+  const status = getWaterStatus(plant.lastWateredAt, freqDays);
+  const color = WATER_STATUS_COLOR[status];
+  const label = WATER_STATUS_LABEL[status];
+  const days = daysUntilWater(plant.lastWateredAt, freqDays);
 
   const [historyVisible, setHistoryVisible] = useState(false);
-  const [history, setHistory]               = useState<TCareRecord[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  const [history, setHistory] = useState<TCareRecord[]>([]);
 
   const lastDate = new Date(plant.lastWateredAt).toLocaleDateString('ru-RU', {
     day: '2-digit', month: '2-digit', year: 'numeric',
   });
 
   const openHistory = async () => {
-    setHistoryLoading(true);
+    setHistory(getHistory(plant.id));
     setHistoryVisible(true);
-    const r = await getHistory(plant.id);
-    setHistory(r);
-    setHistoryLoading(false);
   };
 
   const daysLabel = days > 0
     ? `Следующий полив через ${days} дн.`
     : days === 0 ? 'Полить сегодня!'
-    : `Просрочено на ${Math.abs(days)} дн.`;
+      : `Просрочено на ${Math.abs(days)} дн.`;
 
   const StatusIcon = WaterStatusIcon[status];
 
@@ -352,9 +345,7 @@ function PlantCard({ plant, onEdit, onDelete, onWaterRequest, getHistory }: {
                 <Text style={hm.closeBtnText}>✕</Text>
               </Pressable>
             </View>
-            {historyLoading ? (
-              <ActivityIndicator color={C.sage} style={{ marginTop: 24 }} />
-            ) : history.length === 0 ? (
+            {history.length === 0 ? (
               <Text style={hm.empty}>История пуста</Text>
             ) : (
               <ScrollView showsVerticalScrollIndicator={false}>
@@ -363,7 +354,7 @@ function PlantCard({ plant, onEdit, onDelete, onWaterRequest, getHistory }: {
                     <View style={hm.itemDot} />
                     <View>
                       <Text style={hm.itemDate}>
-                        {new Date(r.date).toLocaleDateString('ru-RU', {
+                        {new Date(r.createdAt).toLocaleDateString('ru-RU', {
                           day: '2-digit', month: 'long', year: 'numeric',
                           hour: '2-digit', minute: '2-digit',
                         })}
@@ -386,68 +377,48 @@ function PlantCard({ plant, onEdit, onDelete, onWaterRequest, getHistory }: {
 // Главный экран
 // ══════════════════════════════════════════════════════════════════════════════
 export default function PlantsScreen() {
-  const { user }                        = useUserStore((s) => s);
-  const [plants, setPlants]             = useState<TPlant[]>([]);
-  const [loading, setLoading]           = useState(false);
-  const [error, setError]               = useState<string | null>(null);
-  const [familyUuid, setFamilyUuid]     = useState<string | null>(null);
-  const [formVisible, setFormVisible]   = useState(false);
-  const [editTarget, setEditTarget]     = useState<TPlant | null>(null);
-
-  // ── стейты для красивых модалок ──
-  const [waterTarget, setWaterTarget]   = useState<TPlant | null>(null);
+  const [formVisible, setFormVisible] = useState(false);
+  const [editTarget, setEditTarget] = useState<TPlant | null>(null);
+  const [waterTarget, setWaterTarget] = useState<TPlant | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<TPlant | null>(null);
 
-  useEffect(() => {
-    if (!user?.uid) return;
-    getDocument('users', user.uid).then((data) => {
-      if (data?.family_uuid) setFamilyUuid(data.family_uuid);
-    });
-  }, [user?.uid]);
+  const {
+    plants,
+    loading,
+    familyUuid,
+    add,
+    update,
+    remove,
+    water,
+    getHistory,
+  } = usePlants()
 
-  const load = useCallback(async () => {
-    if (!familyUuid) return;
-    setLoading(true); setError(null);
-    try {
-      const data = await getPlants(familyUuid);
-      data.sort((a, b) => {
-        const dA = daysUntilWater(a.lastWateredAt, WATER_FREQUENCY_DAYS[a.waterFrequency]);
-        const dB = daysUntilWater(b.lastWateredAt, WATER_FREQUENCY_DAYS[b.waterFrequency]);
-        return dA - dB;
-      });
-      setPlants(data);
-    } catch {
-      setError('Не удалось загрузить данные');
-    } finally {
-      setLoading(false);
-    }
-  }, [familyUuid]);
-
-  useEffect(() => { load(); }, [load]);
+  const openAdd = () => { setEditTarget(null); setFormVisible(true); };
+  const openEdit = (p: TPlant) => { setEditTarget(p); setFormVisible(true); };
 
   const handleSave = async (data: TCreatePlant) => {
-    if (!familyUuid || !user?.uid) return;
-    if (editTarget) await updatePlant(editTarget.id, data);
-    else await addPlant(data, familyUuid, user.uid);
+    if (editTarget) {
+      await update({ id: editTarget.id, ...data });
+      setEditTarget(null)
+    } else {
+      await add(data);
+    }
+
     setFormVisible(false);
-    await load();
   };
 
   const handleWaterConfirm = async () => {
-    if (!waterTarget || !familyUuid) return;
-    await waterPlant(waterTarget.id, familyUuid);
-    await load();
+    if (!waterTarget) return;
+    await water(waterTarget.id);
+    setWaterTarget(null)
   };
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-    await deletePlant(deleteTarget.id);
-    await load();
+    await remove(deleteTarget.id);
+    setDeleteTarget(null)
   };
 
-  const getHistory = (plantId: string) => getCareRecords(plantId);
-  const openAdd    = () => { setEditTarget(null); setFormVisible(true); };
-  const openEdit   = (p: TPlant) => { setEditTarget(p); setFormVisible(true); };
 
   return (
     <View style={s.root}>
@@ -500,10 +471,6 @@ export default function PlantsScreen() {
       ) : loading ? (
         <View style={s.centered}>
           <ActivityIndicator size="large" color={C.sage} />
-        </View>
-      ) : error ? (
-        <View style={s.centered}>
-          <Text style={s.errorText}>{error}</Text>
         </View>
       ) : plants.length === 0 ? (
         <View style={s.centered}>

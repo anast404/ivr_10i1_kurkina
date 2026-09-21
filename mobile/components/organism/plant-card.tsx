@@ -132,7 +132,7 @@ export function PlantCard({ plant, onEdit, onDelete, onWater, getHistory }: TPla
                 {history.map((record) => (
                   <View key={record.id} style={styles.historyItem}>
                     <StyledText style={styles.historyDate}>
-                      💧 {new Date(record.date).toLocaleDateString('ru-RU', {
+                      💧 {new Date(record.createdAt).toLocaleDateString('ru-RU', {
                         day: '2-digit', month: '2-digit', year: 'numeric',
                         hour: '2-digit', minute: '2-digit',
                       })}

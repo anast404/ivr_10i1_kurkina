@@ -3,7 +3,6 @@ import useUserStore from '@/state/user';
 import { COLORS } from '@/styles/colors';
 import { PillStatus, TCreatePill, TPill, TUpdatePill } from '@/types/pill';
 import { getError } from '@/utils/error';
-// import { deletePill, updatePill } from '@/utils/pills-store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import Toast from 'react-native-toast-message';
@@ -41,8 +40,6 @@ export function usePills() {
   const queryClient = useQueryClient();
 
   const familyUuid = useMemo(() => user?.family_id ?? "", [user])
-
-  // const [pills, setPills] = useState<TPill[]>([]);
 
   const [sortKey, setSortKey] = useState<SortKey>('expiresAt');
   const [filterStatus, setFilterStatus] = useState<PillStatus | 'all'>('all');
@@ -92,7 +89,7 @@ export function usePills() {
     }
   });
 
-  const loading = isPending || createPillMutation.isPending || updatePillMutation.isPending
+  const loading = isPending || createPillMutation.isPending || updatePillMutation.isPending || deletePillMutation.isPending
 
   const add = (data: TCreatePill) => {
     createPillMutation.mutate(data)

@@ -1,5 +1,3 @@
-import { ObjectId } from "mongoose";
-
 export interface CreatePillDto {
   name: string;
   description?: string;

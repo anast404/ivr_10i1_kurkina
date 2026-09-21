@@ -5,7 +5,8 @@
   "scripts": {
     "build": "tsc && tsc-alias",
     "start": "node dist/app.js",
-    "dev": "nodemon --watch src --ext ts --exec ts-node src/app.ts"
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/app.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

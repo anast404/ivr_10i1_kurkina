@@ -34,6 +34,14 @@ export enum WaterStatus {
   overdue = 'overdue',       // полив просрочен
 }
 
+/** Запись в истории ухода */
+export type TCareRecord = {
+  id: string;
+  createdAt: string;
+  note?: string;
+  familyUuid: string;
+};
+
 /** Тип растения */
 export type TPlant = {
   id: string;
@@ -44,16 +52,15 @@ export type TPlant = {
   createdAt: string;
   createdBy: string;
   familyUuid: string;
+  careHistory?: TCareRecord[];
 };
 
 /** Тип для создания нового растения */
-export type TCreatePlant = Omit<TPlant, 'id' | 'createdAt' | 'createdBy' | 'familyUuid'>;
+export type TCreatePlant = Omit<TPlant, 'id' | 'createdAt' | 'createdBy' | 'familyUuid' | 'careHistory'>;
 
-/** Запись в истории ухода */
-export type TCareRecord = {
+export type TUpdatePlant = Omit<TPlant, 'createdAt' | 'createdBy' | 'familyUuid' | 'careHistory'>;
+
+export type TCreateCarePlant = {
   id: string;
-  plantId: string;
-  date: string;       // ISO-строка
   note?: string;
-  familyUuid: string;
 };
