@@ -1,5 +1,4 @@
 import { WaterFrequency } from "@/constants/plant";
-import { ObjectId } from "mongodb";
 import mongoose, { Document, Model, Schema, Types } from "mongoose";
 
 export interface IPlant extends Document {
@@ -11,7 +10,6 @@ export interface IPlant extends Document {
   createdBy: Types.ObjectId;
   family_id: Types.ObjectId;
   careHistory: {
-    id: ObjectId;
     note?: string;
     createdAt: Date;
     createdBy: Types.ObjectId;

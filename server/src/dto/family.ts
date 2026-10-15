@@ -9,4 +9,5 @@ export interface GetFamilyQueryDto {
 export interface FamilyResponseDto {
   name: string;
   family_id: string;
+  message?: string;
 }

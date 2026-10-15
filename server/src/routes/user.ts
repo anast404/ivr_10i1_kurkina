@@ -3,9 +3,10 @@ import {
   UpdateUserDto,
   UserResponseDto,
 } from "@dto/index";
+import Family from "@models/Family";
 import checkAuthAndReturnUser from "@routes/index";
 import express, { Request, Response } from "express";
-import { isValidObjectId, Types } from "mongoose";
+import { isValidObjectId } from "mongoose";
 
 const router = express.Router();
 
@@ -44,7 +45,12 @@ router.put(
           res.status(400).json({ message: "Некорректный family_id" });
           return;
         }
-        user.family_id = new Types.ObjectId(family_id);
+        const family = await Family.findById(family_id);
+        if (!family) {
+          res.status(404).json({ message: "Семья с таким идентификатором не найдена" });
+          return;
+        }
+        user.family_id = family._id;
       }
 
       await user.save();

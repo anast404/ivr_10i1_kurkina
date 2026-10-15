@@ -3,6 +3,20 @@ import User, { IUser } from "@models/User";
 import { Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
+export class HttpError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+/** Пользователь должен состоять в семье, иначе данные некуда привязывать */
+export function requireFamily(user: IUser) {
+  if (!user.family_id) {
+    throw new HttpError(400, "Сначала создайте семью или присоединитесь к ней");
+  }
+  return user.family_id;
+}
+
 type UserHandler = (user: IUser) => Promise<void> | void;
 
 interface AuthJwtPayload extends JwtPayload {
@@ -34,7 +48,10 @@ async function checkAuthAndReturnUser(
     await next(user);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    res.status(500).json({ message: message });
+    const status = err instanceof HttpError ? err.status : 500;
+    if (!res.headersSent) {
+      res.status(status).json({ message: message });
+    }
   }
 }
 

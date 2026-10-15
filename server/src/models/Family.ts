@@ -9,7 +9,7 @@ const familySchema = new Schema<IFamily>({
   name: { type: String, required: true },
   owner_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Family",
+    ref: "User",
     required: true,
   },
 });

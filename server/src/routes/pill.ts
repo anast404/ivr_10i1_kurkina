@@ -1,14 +1,14 @@
 import { CreatePillDto, MsgResponseDto, PillResponseDto, UpdatePillDto } from "@dto/index";
 import Pill from "@models/Pill";
-import checkAuthAndReturnUser from "@routes/index";
+import checkAuthAndReturnUser, { requireFamily } from "@routes/index";
 import express, { Request, Response } from "express";
 
 const router = express.Router();
 
 // создаем запись о лекарстве
 router.post("/create", async (req: Request<{}, {}, CreatePillDto>, res: Response<MsgResponseDto>) => {
-  // проверяем валидацию и возвращаем запись активного пользователя
   await checkAuthAndReturnUser(req, res, async (user) => {
+    const familyId = requireFamily(user);
     const { name, description, quantity, expiresAt } = req.body;
 
     const pill = new Pill({
@@ -18,7 +18,7 @@ router.post("/create", async (req: Request<{}, {}, CreatePillDto>, res: Response
       expiresAt,
       createdAt: new Date(),
       createdBy: user._id,
-      family_id: user.family_id,
+      family_id: familyId,
     });
     await pill.save();
 
@@ -27,10 +27,11 @@ router.post("/create", async (req: Request<{}, {}, CreatePillDto>, res: Response
 });
 
 router.post("/update", async (req: Request<{}, {}, UpdatePillDto>, res: Response<MsgResponseDto>) => {
-  // проверяем валидацию и возвращаем запись активного пользователя
-  await checkAuthAndReturnUser(req, res, async () => {
+  await checkAuthAndReturnUser(req, res, async (user) => {
+    const familyId = requireFamily(user);
     const { id, name, description, quantity, expiresAt } = req.body;
-    const selected = await Pill.findById(id);
+    // ищем только среди записей своей семьи
+    const selected = await Pill.findOne({ _id: id, family_id: familyId });
 
     if (!selected) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
@@ -48,11 +49,11 @@ router.post("/update", async (req: Request<{}, {}, UpdatePillDto>, res: Response
 });
 
 router.delete("/:id", async (req: Request, res: Response<MsgResponseDto>) => {
-  // проверяем авторизацию и возвращаем текущего пользователя
-  await checkAuthAndReturnUser(req, res, async () => {
+  await checkAuthAndReturnUser(req, res, async (user) => {
+    const familyId = requireFamily(user);
     const { id } = req.params;
 
-    const deletedDocument = await Pill.findByIdAndDelete(id);
+    const deletedDocument = await Pill.findOneAndDelete({ _id: id, family_id: familyId });
 
     if (!deletedDocument) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
@@ -61,13 +62,12 @@ router.delete("/:id", async (req: Request, res: Response<MsgResponseDto>) => {
 
     res.status(200).json({ message: 'Запись успешно удалена' });
   });
-}
-);
+});
 
 router.get("", async (req: Request, res: Response<PillResponseDto | MsgResponseDto>) => {
-  // проверяем автоизацию
   await checkAuthAndReturnUser(req, res, async (user) => {
-    const pills = await Pill.find({ family_id: user.family_id });
+    const familyId = requireFamily(user);
+    const pills = await Pill.find({ family_id: familyId });
 
     res.json(pills);
   });

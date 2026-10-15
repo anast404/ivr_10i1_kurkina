@@ -1,24 +1,25 @@
 import { CreateShoppingDto, ShoppingsResponseDto, UpdateShoppingDto, UpdateShoppingParams } from "@/dto/shopping";
 import Shopping from "@/models/Shopping";
 import { MsgResponseDto, } from "@dto/index";
-import checkAuthAndReturnUser from "@routes/index";
+import checkAuthAndReturnUser, { requireFamily } from "@routes/index";
 import express, { Request, Response } from "express";
 
 const router = express.Router();
 
 router.post("/create", async (req: Request<{}, {}, CreateShoppingDto>, res: Response<MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
+    const familyId = requireFamily(user);
     const { name, category, quantity, buyByDate, frequency } = req.body;
 
     const shopping = new Shopping({
       name,
-      category, 
-      quantity, 
-      buyByDate, 
-      frequency, 
+      category,
+      quantity,
+      buyByDate,
+      frequency,
       createdAt: new Date(),
       createdBy: user._id,
-      family_id: user.family_id
+      family_id: familyId
     });
 
     await shopping.save();
@@ -28,10 +29,11 @@ router.post("/create", async (req: Request<{}, {}, CreateShoppingDto>, res: Resp
 });
 
 router.put("/:id", async (req: Request<UpdateShoppingParams, {}, UpdateShoppingDto>, res: Response<MsgResponseDto>) => {
-  await checkAuthAndReturnUser(req, res, async () => {
+  await checkAuthAndReturnUser(req, res, async (user) => {
+    const familyId = requireFamily(user);
     const { id } = req.params;
     const { name, category, quantity, buyByDate, frequency } = req.body;
-    const selected = await Shopping.findById(id);
+    const selected = await Shopping.findOne({ _id: id, family_id: familyId });
 
     if (!selected) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
@@ -43,8 +45,6 @@ router.put("/:id", async (req: Request<UpdateShoppingParams, {}, UpdateShoppingD
     selected.quantity = quantity;
     selected.buyByDate = buyByDate;
     selected.frequency = frequency;
-    // bought,  bought, 
-    // boughtAt boughtAt
 
     await selected.save();
     res.json({ message: "Покупка успешно обновлена" });
@@ -52,10 +52,11 @@ router.put("/:id", async (req: Request<UpdateShoppingParams, {}, UpdateShoppingD
 });
 
 router.put("/:id/bought", async (req: Request<UpdateShoppingParams, {}, UpdateShoppingDto>, res: Response<MsgResponseDto>) => {
-  await checkAuthAndReturnUser(req, res, async () => {
+  await checkAuthAndReturnUser(req, res, async (user) => {
+    const familyId = requireFamily(user);
     const { id } = req.params;
     const { bought } = req.body;
-    const selected = await Shopping.findById(id);
+    const selected = await Shopping.findOne({ _id: id, family_id: familyId });
 
     if (!selected) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
@@ -63,11 +64,7 @@ router.put("/:id/bought", async (req: Request<UpdateShoppingParams, {}, UpdateSh
     }
 
     selected.bought = bought;
-    if(bought) {
-      selected.boughtAt = new Date()
-    } else {
-      selected.boughtAt = undefined
-    }
+    selected.boughtAt = bought ? new Date() : undefined;
 
     await selected.save();
     res.json({ message: "Покупка успешно обновлена" });
@@ -75,10 +72,11 @@ router.put("/:id/bought", async (req: Request<UpdateShoppingParams, {}, UpdateSh
 });
 
 router.delete("/:id", async (req: Request, res: Response<MsgResponseDto>) => {
-  await checkAuthAndReturnUser(req, res, async () => {
+  await checkAuthAndReturnUser(req, res, async (user) => {
+    const familyId = requireFamily(user);
     const { id } = req.params;
 
-    const deletedDocument = await Shopping.findByIdAndDelete(id);
+    const deletedDocument = await Shopping.findOneAndDelete({ _id: id, family_id: familyId });
 
     if (!deletedDocument) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
@@ -91,7 +89,8 @@ router.delete("/:id", async (req: Request, res: Response<MsgResponseDto>) => {
 
 router.get("", async (req: Request, res: Response<ShoppingsResponseDto | MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
-    const shoppings = await Shopping.find({ family_id: user.family_id });
+    const familyId = requireFamily(user);
+    const shoppings = await Shopping.find({ family_id: familyId });
 
     res.json(shoppings);
   });

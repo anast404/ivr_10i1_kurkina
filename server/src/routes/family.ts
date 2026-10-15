@@ -1,6 +1,6 @@
 import { CreateFamilyDto, FamilyResponseDto, GetFamilyQueryDto, MsgResponseDto } from "@dto/index";
 import Family from "@models/Family";
-import checkAuthAndReturnUser from "@routes/index";
+import checkAuthAndReturnUser, { HttpError } from "@routes/index";
 import express, { Request, Response } from "express";
 
 const router = express.Router();
@@ -19,18 +19,21 @@ router.post("/create", async (req: Request<{}, {}, CreateFamilyDto>, res: Respon
     user.family_id = family._id;
     await user.save();
 
-    res.json({ family_id: family._id.toString(), name: family.name });
+    res.json({ family_id: family._id.toString(), name: family.name, message: "Семья создана" });
   });
 });
 
 // забираем объект семьи по айдишнику
 router.get("", async (req: Request<{}, {}, {}, GetFamilyQueryDto>, res: Response<FamilyResponseDto | MsgResponseDto>) => {
   // проверяем автоизацию
-  await checkAuthAndReturnUser(req, res, async () => {
-    // проверяем а есть ли семья с таким айдишником
-    const family = await Family.findById(req.query.id);
+  await checkAuthAndReturnUser(req, res, async (user) => {
+    // отдаём только семью текущего пользователя
+    if (!user.family_id || String(user.family_id) !== String(req.query.id)) {
+      throw new HttpError(403, "Нет доступа к этой семье");
+    }
+    const family = await Family.findById(user.family_id);
     if (!family) {
-      throw new Error("Нет такой семьи");
+      throw new HttpError(404, "Нет такой семьи");
     }
 
     res.json({ family_id: family._id.toString(), name: family.name });
