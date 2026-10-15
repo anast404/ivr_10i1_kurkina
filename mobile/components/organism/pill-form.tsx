@@ -5,9 +5,9 @@ import {
   isValid,
   pillValidationRules,
   runValidation,
-  validateNumber,
 } from '@/utils/validation';
-import { useEffect, useState } from 'react';
+import { parseDate } from '@/utils/date';
+import { useState } from 'react';
 import {
   Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
@@ -26,14 +26,6 @@ export function formatDate(iso: string): string {
   return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
 }
 
-export function parseDate(str: string): string {
-  const parts = str.split('.');
-  if (parts.length !== 3) return '';
-  const [day, month, year] = parts;
-  const d = new Date(`${year}-${month}-${day}`);
-  return isNaN(d.getTime()) ? '' : d.toISOString();
-}
-
 export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) {
   const [name, setName]           = useState(initial?.name ?? '');
   const [description, setDesc]    = useState(initial?.description ?? '');
@@ -44,13 +36,6 @@ export function PillForm({ visible, initial, onSave, onClose }: TPillFormProps) 
 
   const clearError = (field: string) =>
     setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
-
-  useEffect(() => {
-    const err = validateNumber(quantity)
-    if(err) {
-      setErrors(prev => ({...prev, 'quantity': err}))
-    }
-  }, [quantity])
 
   const handleSave = () => {
     const errs = runValidation({ name, dateInput, quantity }, pillValidationRules);

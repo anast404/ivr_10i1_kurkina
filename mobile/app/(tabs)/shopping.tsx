@@ -1,6 +1,7 @@
 import { getShoppingStatus, SHOPPING_STATUS_COLOR, SHOPPING_STATUS_LABEL, ShoppingSortKey, useShoppingItems } from '@/hooks/use-shopping';
 import { COLORS as C } from '@/styles/colors';
 import { SHOPPING_FREQUENCY_LABEL, ShoppingFrequency, TCreateShoppingItem, TShoppingItem } from '@/types/shopping';
+import { parseDate } from '@/utils/date';
 import { isValid, runValidation, shoppingValidationRules, ValidationErrors } from '@/utils/validation';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -31,14 +32,6 @@ function fmtDate(iso?: string): string {
   return new Date(iso).toLocaleDateString('ru-RU', {
     day: '2-digit', month: '2-digit', year: 'numeric',
   });
-}
-
-function parseDate(str: string): string {
-  const parts = str.split('.');
-  if (parts.length !== 3) return '';
-  const [d, m, y] = parts;
-  const date = new Date(`${y}-${m}-${d}`);
-  return isNaN(date.getTime()) ? '' : date.toISOString();
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

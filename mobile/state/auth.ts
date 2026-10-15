@@ -6,7 +6,7 @@ interface AuthStore {
 }
 
 const useAuthStore = create<AuthStore>((set) => ({
-    user: undefined,
+    token: undefined,
     setToken: (token) => set({ token }),
 }));
 

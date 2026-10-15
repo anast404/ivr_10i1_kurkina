@@ -20,8 +20,8 @@ import Toast from 'react-native-toast-message';
 type Mode = 'signIn' | 'register';
 
 export function LoginForm() {
-  const [email, setEmail] = useState('bacrilio@gmail.com');
-  const [password, setPassword] = useState('1111111');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [mode, setMode] = useState<Mode>('signIn');
   const [focusedField, setFocused] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +35,8 @@ export function LoginForm() {
       return api.post('/auth/login', data);
     },
     onSuccess: (data) => {
+      // сбрасываем кэш, чтобы данные прошлого аккаунта не попали в новую сессию
+      queryClient.clear();
       setToken(data.data.token);
 
       queryClient.invalidateQueries({ queryKey: ['getUser'] });

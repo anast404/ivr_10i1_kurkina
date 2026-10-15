@@ -143,7 +143,7 @@ export default function PillsScreen() {
   const [deleteTarget, setDeleteTarget] = useState<TPill | null>(null);
 
   const openAdd = () => { setEditTarget(null); setFormVisible(true); };
-  const openEdit = (pill: TPill) => { console.log(pill); setEditTarget(pill); setFormVisible(true); };
+  const openEdit = (pill: TPill) => { setEditTarget(pill); setFormVisible(true); };
 
   const handleSave = async (data: TCreatePill) => {
     if (editTarget) await update(editTarget.id, data);

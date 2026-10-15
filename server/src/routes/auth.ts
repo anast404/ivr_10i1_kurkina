@@ -39,11 +39,18 @@ router.post("/register", async (req: Request<{}, {}, RegisterDto>, res: Response
 
     // создаем ссылку валидации и отправляем письмо
     const url = `${process.env.BASE_URL}/api/auth/verify/${emailToken}`;
-    await transporter.sendMail({
-      to: email,
-      subject: "Подтверждение регистрации",
-      html: `Перейдите по этой ссылке <a href="${url}">here</a> для верификации регистрации`,
-    });
+    try {
+      await transporter.sendMail({
+        to: email,
+        subject: "Подтверждение регистрации",
+        html: `Перейдите по этой ссылке <a href="${url}">here</a> для верификации регистрации`,
+      });
+    } catch (mailErr) {
+      // не оставляем неверифицируемого пользователя, иначе повторная регистрация невозможна
+      await User.deleteOne({ _id: user._id });
+      const mailMessage = mailErr instanceof Error ? mailErr.message : String(mailErr);
+      return res.status(500).json({ message: `Не удалось отправить письмо: ${mailMessage}` });
+    }
 
     return res.json({
       message: "Вы зарегистрированы! Вам отправлено письмо для верификации регистрации. Доступ будет открыт после успешной верификации.",
@@ -78,26 +85,32 @@ router.get("/verify/:token", async (req: Request<VerifyEmailParamsDto>, res: Res
 router.post(
   "/login",
   async (req: Request<{}, {}, LoginDto>, res: Response<LoginResponseDto | MsgResponseDto>) => {
-    const { email, password } = req.body;
+    try {
+      const { email, password } = req.body;
 
-    // ищем пользователя
-    const user = await User.findOne({ email });
-    if (!user || !user.isVerified) {
-      return res.status(400).json({ message: "Не найден такой пользователь или он не верифицирован" });
+      // ищем пользователя
+      const user = await User.findOne({ email });
+      if (!user || !user.isVerified) {
+        return res.status(400).json({ message: "Не найден такой пользователь или он не верифицирован" });
+      }
+
+      // проверяем пароль
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Некорректный пароль" });
+      }
+
+      // создаем новый токен авторизации
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: "8h" });
+
+      return res.json({
+        token
+      });
+    } catch (err) {
+      // без try/catch необработанный reject в async-хендлере express 4 роняет процесс
+      const message = err instanceof Error ? err.message : String(err);
+      return res.status(500).json({ message: message });
     }
-
-    // проверяем пароль
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Некорректный пароль" });
-    }
-
-    // создаем новый токен авторизации
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET as string, { expiresIn: "8h" });
-
-    return res.json({
-      token
-    });
   }
 );
 

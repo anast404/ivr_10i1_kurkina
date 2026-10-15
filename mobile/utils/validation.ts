@@ -2,6 +2,8 @@
  * Общие утилиты валидации форм
  */
 
+import { parseDate } from "@/utils/date";
+
 // ─── Типы ────────────────────────────────────────────────────────────────────
 
 export type ValidationErrors = Record<string, string>;
@@ -39,15 +41,12 @@ export function validateDateString(value: string, required = false): string | nu
   if (!value.trim()) {
     return required ? 'Введите дату' : null;
   }
-  const parts = value.split('.');
-  if (parts.length !== 3) return 'Формат: ДД.ММ.ГГГГ';
-  const [d, m, y] = parts;
-  const date = new Date(`${y}-${m}-${d}`);
-  return isNaN(date.getTime()) ? 'Формат: ДД.ММ.ГГГГ' : null;
+  return parseDate(value) ? null : 'Формат: ДД.ММ.ГГГГ';
 }
 
 export function validateNumber(value: string, message = 'Введите число'): string | null {
-  return Number.isFinite(Number(value)) ? null : message;
+  const n = Number(value);
+  return value.trim() !== '' && Number.isFinite(n) && n >= 0 ? null : message;
 }
 
 // ─── Запуск набора правил ────────────────────────────────────────────────────
