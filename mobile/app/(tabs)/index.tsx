@@ -470,7 +470,7 @@ export default function ProfileScreen() {
               <View style={styles.rowIconWrap}><Text style={styles.rowIcon}>👨‍👩‍👧</Text></View>
               <View style={styles.rowContent}>
                 <Text style={styles.rowLabel}>Семья</Text>
-                <Text style={styles.rowValue}>{familyName ?? 'Не настроено'}</Text>
+                <Text style={styles.rowValue}>{familyName || 'Не настроено'}</Text>
               </View>
               <View style={styles.rowAction}>
                 <Text style={styles.rowActionText}>
