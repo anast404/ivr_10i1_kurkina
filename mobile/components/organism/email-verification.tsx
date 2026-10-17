@@ -1,5 +1,9 @@
+import api from '@/api';
+import useUserStore from '@/state/user';
 import { COLORS as C } from '@/styles/colors';
 import logout from '@/utils/auth';
+import { getError } from '@/utils/error';
+import { isAxiosError } from 'axios';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -25,7 +29,6 @@ export function EmailVerification() {
 
   const pulseAnim  = useRef(new Animated.Value(1)).current;
   const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
-  const checkTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Пульсация конверта
   useEffect(() => {
@@ -37,18 +40,40 @@ export function EmailVerification() {
     ).start();
   }, []);
 
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
+  const email = user?.email ?? '';
+
+  /** Спрашивает сервер, подтверждена ли почта; если да, приложение само откроет главный экран */
+  const checkVerified = async (silent: boolean): Promise<void> => {
+    if (!silent) {
+      setChecking(true);
+      setError(null);
+    }
+    try {
+      const res = await api.get('/user');
+      if (res.data?.isVerified) {
+        setVerified(true);
+        setUser(res.data);
+      } else if (!silent) {
+        setError('Почта ещё не подтверждена. Перейдите по ссылке из письма.');
+      }
+    } catch (err) {
+      if (!silent) {
+        setError(getError(err));
+      }
+    } finally {
+      if (!silent) {
+        setChecking(false);
+      }
+    }
+  };
+
   // Автопроверка каждые 5 секунд
-  // useEffect(() => {
-  //   checkTimer.current = setInterval(async () => {
-  //     const ok = await checkEmailVerified();
-  //     if (ok) {
-  //       clearInterval(checkTimer.current!);
-  //       setVerified(true);
-  //       // _layout.tsx автоматически перенаправит когда user.emailVerified станет true
-  //     }
-  //   }, 5000);
-  //   return () => { if (checkTimer.current) clearInterval(checkTimer.current); };
-  // }, []);
+  useEffect(() => {
+    const id = setInterval(() => { void checkVerified(true); }, 5000);
+    return () => clearInterval(id);
+  }, []);
 
   // Таймер повторной отправки
   useEffect(() => {
@@ -68,30 +93,25 @@ export function EmailVerification() {
     setError(null);
     setSuccessMsg(null);
     try {
-      // await sendVerificationEmail();
-      setSuccessMsg('Письмо отправлено! Проверьте почту.');
+      const res = await api.post('/auth/resend');
+      setSuccessMsg(res.data?.message ?? 'Письмо отправлено! Проверьте почту.');
       setCooldown(RESEND_COOLDOWN_SEC);
-    } catch {
-      setError('Не удалось отправить письмо. Попробуйте позже.');
+    } catch (err) {
+      const message = getError(err);
+      setError(message);
+      // сервер подсказывает, через сколько секунд можно повторить: «…через 42 с»
+      if (isAxiosError(err) && err.response?.status === 429) {
+        const seconds = Number(/(\d+)/.exec(message)?.[1]);
+        if (seconds > 0) {
+          setCooldown(seconds);
+        }
+      }
     } finally {
       setSending(false);
     }
   };
 
-  const handleCheckNow = async () => {
-    setChecking(true);
-    setError(null);
-    // const ok = await checkEmailVerified();
-    // setChecking(false);
-    // if (ok) {
-    //   setVerified(true);
-    // } else {
-    //   setError('Почта ещё не подтверждена. Проверьте письмо.');
-    // }
-  };
-
-  // const email = user?.email ?? '';
-  const email = '';
+  const handleCheckNow = () => checkVerified(false);
 
   return (
     <KeyboardAvoidingView

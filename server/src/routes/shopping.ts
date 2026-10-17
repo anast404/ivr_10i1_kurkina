@@ -1,22 +1,31 @@
+import { ShoppingFrequency, SHOPPING_FREQUENCY_DAYS } from "@/constants/shopping";
 import { CreateShoppingDto, ShoppingsResponseDto, UpdateShoppingDto, UpdateShoppingParams } from "@/dto/shopping";
 import Shopping from "@/models/Shopping";
+import { HttpError } from "@/utils/errors";
+import { optionalDate, optionalText, parseEnum, requiredText } from "@/utils/validation";
 import { MsgResponseDto, } from "@dto/index";
 import checkAuthAndReturnUser, { requireFamily } from "@routes/index";
 import express, { Request, Response } from "express";
 
 const router = express.Router();
 
+/** Проверяет тело запроса и возвращает поля покупки */
+function parseShoppingBody(body: Partial<CreateShoppingDto> | undefined) {
+  return {
+    name: requiredText(body?.name, "Название", 100),
+    category: optionalText(body?.category, "Категория", 50),
+    quantity: optionalText(body?.quantity, "Количество", 50),
+    buyByDate: optionalDate(body?.buyByDate, "Купить до"),
+    frequency: parseEnum(body?.frequency, "Периодичность", Object.values(ShoppingFrequency)),
+  };
+}
+
 router.post("/create", async (req: Request<{}, {}, CreateShoppingDto>, res: Response<MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
     const familyId = requireFamily(user);
-    const { name, category, quantity, buyByDate, frequency } = req.body;
 
     const shopping = new Shopping({
-      name,
-      category,
-      quantity,
-      buyByDate,
-      frequency,
+      ...parseShoppingBody(req.body),
       createdAt: new Date(),
       createdBy: user._id,
       family_id: familyId
@@ -31,42 +40,59 @@ router.post("/create", async (req: Request<{}, {}, CreateShoppingDto>, res: Resp
 router.put("/:id", async (req: Request<UpdateShoppingParams, {}, UpdateShoppingDto>, res: Response<MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
     const familyId = requireFamily(user);
-    const { id } = req.params;
-    const { name, category, quantity, buyByDate, frequency } = req.body;
-    const selected = await Shopping.findOne({ _id: id, family_id: familyId });
+    const fields = parseShoppingBody(req.body);
+    const selected = await Shopping.findOne({ _id: req.params.id, family_id: familyId });
 
     if (!selected) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
       return;
     }
 
-    selected.name = name;
-    selected.category = category;
-    selected.quantity = quantity;
-    selected.buyByDate = buyByDate;
-    selected.frequency = frequency;
-
+    selected.set(fields);
     await selected.save();
     res.json({ message: "Покупка успешно обновлена" });
   });
 });
 
+// отметка «куплено»; для повторяющихся покупок сразу создаём следующую
 router.put("/:id/bought", async (req: Request<UpdateShoppingParams, {}, UpdateShoppingDto>, res: Response<MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
     const familyId = requireFamily(user);
-    const { id } = req.params;
-    const { bought } = req.body;
-    const selected = await Shopping.findOne({ _id: id, family_id: familyId });
+    const bought = req.body?.bought;
+    if (typeof bought !== "boolean") {
+      throw new HttpError(400, "Поле «bought» должно быть true или false");
+    }
+
+    const selected = await Shopping.findOne({ _id: req.params.id, family_id: familyId });
 
     if (!selected) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
       return;
     }
 
+    const wasBought = !!selected.bought;
     selected.bought = bought;
     selected.boughtAt = bought ? new Date() : undefined;
-
     await selected.save();
+
+    // повтор создаём только при переходе «не куплено → куплено», чтобы повторный запрос не плодил дубликаты
+    const days = SHOPPING_FREQUENCY_DAYS[selected.frequency];
+    if (bought && !wasBought && days) {
+      const nextDate = new Date();
+      nextDate.setDate(nextDate.getDate() + days);
+
+      await new Shopping({
+        name: selected.name,
+        category: selected.category,
+        quantity: selected.quantity,
+        buyByDate: nextDate,
+        frequency: selected.frequency,
+        createdAt: new Date(),
+        createdBy: user._id,
+        family_id: familyId,
+      }).save();
+    }
+
     res.json({ message: "Покупка успешно обновлена" });
   });
 });
@@ -74,9 +100,8 @@ router.put("/:id/bought", async (req: Request<UpdateShoppingParams, {}, UpdateSh
 router.delete("/:id", async (req: Request, res: Response<MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
     const familyId = requireFamily(user);
-    const { id } = req.params;
 
-    const deletedDocument = await Shopping.findOneAndDelete({ _id: id, family_id: familyId });
+    const deletedDocument = await Shopping.findOneAndDelete({ _id: req.params.id, family_id: familyId });
 
     if (!deletedDocument) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });

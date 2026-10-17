@@ -1,7 +1,5 @@
-// dotenv должен подгрузиться ДО остальных импортов: auth.ts создаёт почтовый транспорт при импорте
-import "dotenv/config";
-import express from "express";
-import connectDB from "./config/db";
+import express, { ErrorRequestHandler, RequestHandler } from "express";
+import { rateLimit } from "./middleware/rateLimit";
 import authRoutes from "./routes/auth";
 import familyRoutes from "./routes/family";
 import pillRoutes from "./routes/pill";
@@ -9,33 +7,55 @@ import plantRoutes from "./routes/plant";
 import shoppingRoutes from "./routes/shopping";
 import userRoutes from "./routes/user";
 
-const REQUIRED_ENV = ["JWT_SECRET", "MONGO_URI"];
-const missing = REQUIRED_ENV.filter((name) => !process.env[name]);
-if (missing.length) {
-  console.error(`Не заданы переменные окружения: ${missing.join(", ")}. См. server/.env.example`);
-  process.exit(1);
+const notFound: RequestHandler = (_req, res) => {
+  res.status(404).json({ message: "Маршрут не найден" });
+};
+
+// 4 аргумента обязательны: так express распознаёт обработчик ошибок
+const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+  if (err instanceof SyntaxError && "body" in err) {
+    res.status(400).json({ message: "Некорректный JSON в теле запроса" });
+    return;
+  }
+  console.error(err);
+  res.status(500).json({ message: "Внутренняя ошибка сервера" });
+};
+
+/** Собирает express-приложение без запуска сервера и подключения к базе (удобно для тестов) */
+export function createApp() {
+  const app = express();
+
+  app.disable("x-powered-by");
+  // за обратным прокси (nginx, облачный балансировщик) задайте TRUST_PROXY=1, чтобы лимит считался по реальному IP
+  const proxyHops = Number(process.env.TRUST_PROXY);
+  if (proxyHops > 0) {
+    app.set("trust proxy", proxyHops);
+  }
+
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    next();
+  });
+  app.use(express.json({ limit: "100kb" }));
+
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok" });
+  });
+
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: Number(process.env.AUTH_RATE_LIMIT_MAX) || 50,
+  });
+
+  app.use("/api/auth", authLimiter, authRoutes);
+  app.use("/api/user", userRoutes);
+  app.use("/api/family", familyRoutes);
+  app.use("/api/pill", pillRoutes);
+  app.use("/api/plant", plantRoutes);
+  app.use("/api/shopping", shoppingRoutes);
+
+  app.use(notFound);
+  app.use(errorHandler);
+
+  return app;
 }
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-  console.warn("EMAIL_USER/EMAIL_PASS не заданы: письма верификации отправляться не будут");
-}
-
-const app = express();
-app.use(express.json());
-
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok" });
-});
-
-app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/family", familyRoutes);
-app.use("/api/pill", pillRoutes);
-app.use("/api/plant", plantRoutes);
-app.use("/api/shopping", shoppingRoutes);
-
-const PORT = process.env.PORT || 5000;
-
-// поднимаем HTTP только после успешного подключения к базе
-connectDB().then(() => {
-  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-});

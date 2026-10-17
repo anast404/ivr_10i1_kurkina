@@ -2,8 +2,6 @@ import api from '@/api';
 import useUserStore from '@/state/user';
 import { COLORS } from '@/styles/colors';
 import {
-  SHOPPING_FREQUENCY_DAYS,
-  ShoppingFrequency,
   ShoppingItemStatus,
   TBoughtShoppingItem,
   TCreateShoppingItem,
@@ -125,27 +123,8 @@ export function useShoppingItems() {
   const shoppings = useMemo<TShoppingItem[]>(() => data?.data ?? [], [data]);
 
   const toggleBought = async (id: string, bought: boolean) => {
+    // следующая повторяющаяся покупка создаётся на сервере при отметке «куплено»
     putBoughtMutation.mutate({ id, bought })
-
-    // Если повторяющийся товар помечен куплен — автоматически пересоздаём его
-    const item = shoppings.find((i) => i.id === id);
-
-    if (bought && item && item.frequency !== ShoppingFrequency.once) {
-      const days = SHOPPING_FREQUENCY_DAYS[item.frequency];
-      if (days) {
-        const nextDate = new Date();
-        nextDate.setDate(nextDate.getDate() + days);
-        add(
-          {
-            name: item.name,
-            category: item.category,
-            quantity: item.quantity,
-            buyByDate: nextDate.toISOString(),
-            frequency: item.frequency,
-          }
-        );
-      }
-    }
   };
 
   // Фильтрация и сортировка

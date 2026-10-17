@@ -19,7 +19,7 @@ const shoppingSchema = new Schema<IShopping>({
   category: { type: String },
   quantity: { type: String },
   buyByDate: { type: Date },
-  frequency: { type: String, required: true },
+  frequency: { type: String, required: true, enum: Object.values(ShoppingFrequency) },
   bought: { type: Boolean },
   boughtAt: { type: Date },
   createdAt: { type: Date, required: true },

@@ -11,3 +11,12 @@ export interface FamilyResponseDto {
   family_id: string;
   message?: string;
 }
+
+export interface FamilyMemberDto {
+  id: string;
+  name?: string;
+  email: string;
+  isOwner: boolean;
+}
+
+export type FamilyMembersResponseDto = FamilyMemberDto[];

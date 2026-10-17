@@ -6,14 +6,15 @@ import Toast from 'react-native-toast-message';
 import api from '@/api';
 import useAuthStore from '@/state/auth';
 import useUserStore from '@/state/user';
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { COLORS as C } from '@/styles/colors';
+import { queryClient } from '@/utils/query-client';
+import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
-
-const queryClient = new QueryClient();
 
 export default function App() {
   return (
@@ -25,11 +26,11 @@ export default function App() {
 }
 
 function RootLayout() {
-  const { token } = useAuthStore((state) => state);
+  const { token, hasHydrated } = useAuthStore((state) => state);
   const { user, setUser } = useUserStore((state) => state);
 
   // todo: isLoading/isError
-  const { data, isSuccess } = useQuery({
+  const { data, isSuccess, isLoading } = useQuery({
     queryKey: ['getUser'],
     queryFn: () => api.get(`/user`),
     enabled: !!token,
@@ -40,6 +41,15 @@ function RootLayout() {
       setUser(data.data)
     }
   }, [isSuccess, data, setUser]);
+
+  // Ждём, пока прочитается сохранённый токен и загрузится профиль, чтобы не мигала форма входа
+  if (!hasHydrated || (token && !user && isLoading)) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.cream }}>
+        <ActivityIndicator color={C.sage} />
+      </View>
+    );
+  }
 
   // Не авторизован → форма входа
   if (!user) {

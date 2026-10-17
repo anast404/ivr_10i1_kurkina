@@ -1,13 +1,10 @@
 import { MsgResponseDto } from "@dto/index";
 import User, { IUser } from "@models/User";
+import { HttpError, toHttpError } from "@/utils/errors";
 import { Request, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
-export class HttpError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-  }
-}
+export { HttpError };
 
 /** Пользователь должен состоять в семье, иначе данные некуда привязывать */
 export function requireFamily(user: IUser) {
@@ -23,14 +20,27 @@ interface AuthJwtPayload extends JwtPayload {
   id: string;
 }
 
+interface AuthOptions {
+  /** Пустить пользователя с неподтверждённой почтой (профиль, повторная отправка письма) */
+  allowUnverified?: boolean;
+}
+
+export function signToken(userId: string): string {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET as string, {
+    expiresIn: (process.env.JWT_EXPIRES_IN ?? "30d") as jwt.SignOptions["expiresIn"],
+  });
+}
+
 async function checkAuthAndReturnUser(
   req: Request<any, any, any, any>,
-  res: Response<MsgResponseDto>,
-  next: UserHandler
+  res: Response<any>,
+  next: UserHandler,
+  options: AuthOptions = {}
 ): Promise<Response | void> {
-  const token = req.header("Authorization");
+  // токен принимаем и как есть, и в формате "Bearer <token>"
+  const token = req.header("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) {
-    return res.status(401).json({ message: "Отсутсвует авторизационная информация" });
+    return res.status(401).json({ message: "Отсутствует авторизационная информация" });
   }
 
   let user: IUser | null = null;
@@ -44,13 +54,16 @@ async function checkAuthAndReturnUser(
     return res.status(401).json({ message: "Некорректная авторизационная информация" });
   }
 
+  if (!user.isVerified && !options.allowUnverified) {
+    return res.status(403).json({ message: "Подтвердите почту, чтобы продолжить" });
+  }
+
   try {
     await next(user);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    const status = err instanceof HttpError ? err.status : 500;
+    const httpError = toHttpError(err);
     if (!res.headersSent) {
-      res.status(status).json({ message: message });
+      res.status(httpError.status).json({ message: httpError.message });
     }
   }
 }

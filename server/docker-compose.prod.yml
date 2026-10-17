@@ -1,0 +1,25 @@
+# Запуск на сервере: образ собирает и публикует GitHub Actions (.github/workflows/deploy.yml)
+# Рядом положите файл .env (см. .env.example)
+services:
+  app:
+    image: ghcr.io/anast404/happyhome-server:latest
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    environment:
+      - MONGO_URI=mongodb://db:27017/happyhome
+      - PORT=5000
+      - NODE_ENV=production
+      - TRUST_PROXY=1
+    depends_on:
+      - db
+  db:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

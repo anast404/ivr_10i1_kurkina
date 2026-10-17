@@ -15,3 +15,10 @@ export interface VerifyEmailParamsDto {
 export interface LoginResponseDto {
   token: string;
 }
+
+export interface RegisterResponseDto {
+  message: string;
+  token: string;
+  /** true, если письмо со ссылкой реально отправлено */
+  mailSent: boolean;
+}

@@ -37,7 +37,7 @@ const careHistorySchema = new Schema({
 const plantSchema = new Schema<IPlant>({
   name: { type: String, required: true },
   description: { type: String },
-  waterFrequency: { type: String },
+  waterFrequency: { type: String, required: true, enum: Object.values(WaterFrequency) },
   lastWateredAt: { type: Date, required: true },
   createdAt: { type: Date, required: true },
   createdBy: {
