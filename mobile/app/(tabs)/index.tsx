@@ -1,4 +1,5 @@
 import api from '@/api';
+import { HelpModal } from '@/components/organism/help-modal';
 import useUserStore from '@/state/user';
 import { COLORS as C } from '@/styles/colors';
 import logout from '@/utils/auth';
@@ -126,7 +127,7 @@ function FamilyModal({ visible, onClose, currentFamilyName, currentFamilyUuid }:
         message: text
       });
     } catch (error: any) {
-      Toast.show({ type: 'error', text1: `Oшибка приглашения в семью: ${error?.message || JSON.stringify(error)}` })
+      Toast.show({ type: 'error', text1: `Ошибка приглашения в семью: ${error?.message || JSON.stringify(error)}` })
     }
   };
 
@@ -351,6 +352,7 @@ export default function ProfileScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [familyModalVisible, setFamilyModalVisible] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
 
   const { user } = useUserStore();
 
@@ -437,7 +439,7 @@ export default function ProfileScreen() {
           <Text style={styles.emailText}>{email}</Text>
         </View>
 
-        {/* ── Данные акrкаунта ── */}
+        {/* ── Данные аккаунта ── */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Данные аккаунта</Text>
           <View style={styles.card}>
@@ -481,6 +483,23 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* ── Помощь ── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>О приложении</Text>
+          <View style={styles.card}>
+            <Pressable style={styles.row} onPress={() => setHelpVisible(true)}>
+              <View style={styles.rowIconWrap}><Text style={styles.rowIcon}>❓</Text></View>
+              <View style={styles.rowContent}>
+                <Text style={styles.rowLabel}>Помощь</Text>
+                <Text style={styles.rowValue}>Как пользоваться приложением</Text>
+              </View>
+              <View style={styles.rowAction}>
+                <Text style={styles.rowActionText}>Открыть</Text>
+              </View>
+            </Pressable>
+          </View>
+        </View>
+
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -501,6 +520,9 @@ export default function ProfileScreen() {
         currentFamilyName={familyName}
         currentFamilyUuid={familyId}
       />
+
+      {/* ── Помощь ── */}
+      <HelpModal visible={helpVisible} onClose={() => setHelpVisible(false)} />
     </View>
   );
 }

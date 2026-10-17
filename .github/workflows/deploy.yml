@@ -1,0 +1,64 @@
+name: Deploy server
+
+# Собирает production-образ сервера, публикует его в GitHub Container Registry
+# и (если заданы секреты) обновляет контейнеры на удалённом сервере по SSH.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/happyhome-server
+
+jobs:
+  build-and-push:
+    name: Сборка и публикация образа
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: server
+          file: server/Dockerfile.prod
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+
+  deploy:
+    name: Деплой на сервер
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    env:
+      # шаг деплоя выполняется, только если в репозитории заданы секреты подключения
+      HAS_SERVER: ${{ secrets.DEPLOY_HOST != '' }}
+    steps:
+      - name: Обновить контейнеры по SSH
+        if: env.HAS_SERVER == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+            docker image prune -f
+      - name: Секреты деплоя не заданы
+        if: env.HAS_SERVER != 'true'
+        run: echo "Образ опубликован. Чтобы деплоить автоматически, задайте секреты DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_PATH, GHCR_TOKEN (см. server/README.md)."

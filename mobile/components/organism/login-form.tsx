@@ -52,6 +52,13 @@ export function LoginForm() {
     },
     onSuccess: (data) => {
       Toast.show({type: 'success', text1: data?.data?.message})
+
+      // сервер выдаёт токен сразу: приложение откроет экран «Подтвердите почту»
+      if (data?.data?.token) {
+        queryClient.clear();
+        setToken(data.data.token);
+        queryClient.invalidateQueries({ queryKey: ['getUser'] });
+      }
     },
     onError: (err) => {
       Toast.show({type: 'error', text1: getError(err)})

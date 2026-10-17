@@ -1,4 +1,6 @@
+import { WaterFrequency } from "@/constants/plant";
 import { CreatePlantDto, PlantsResponseDto, PutCareDto, PutCareParams, UpdatePlanParams, UpdatePlantDto } from "@/dto/plant";
+import { optionalText, parseDate, parseEnum, requiredText } from "@/utils/validation";
 import { MsgResponseDto, } from "@dto/index";
 import Plant from "@models/Plant";
 import checkAuthAndReturnUser, { requireFamily } from "@routes/index";
@@ -6,16 +8,23 @@ import express, { Request, Response } from "express";
 
 const router = express.Router();
 
+/** Проверяет тело запроса и возвращает поля растения */
+function parsePlantBody(body: Partial<CreatePlantDto> | undefined) {
+  return {
+    name: requiredText(body?.name, "Название", 100),
+    description: optionalText(body?.description, "Особенности ухода", 1000),
+    waterFrequency: parseEnum(body?.waterFrequency, "Частота полива", Object.values(WaterFrequency)),
+    lastWateredAt: parseDate(body?.lastWateredAt, "Дата последнего полива"),
+  };
+}
+
 router.post("/create", async (req: Request<{}, {}, CreatePlantDto>, res: Response<MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
     const familyId = requireFamily(user);
-    const { name, description, waterFrequency, lastWateredAt } = req.body;
+    const fields = parsePlantBody(req.body);
 
     const plant = new Plant({
-      name,
-      description,
-      waterFrequency,
-      lastWateredAt,
+      ...fields,
       createdAt: new Date(),
       createdBy: user._id,
       family_id: familyId,
@@ -34,20 +43,15 @@ router.post("/create", async (req: Request<{}, {}, CreatePlantDto>, res: Respons
 router.put("/:id", async (req: Request<UpdatePlanParams, {}, UpdatePlantDto>, res: Response<MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
     const familyId = requireFamily(user);
-    const { id } = req.params;
-    const { name, description, waterFrequency, lastWateredAt } = req.body;
-    const selected = await Plant.findOne({ _id: id, family_id: familyId });
+    const fields = parsePlantBody(req.body);
+    const selected = await Plant.findOne({ _id: req.params.id, family_id: familyId });
 
     if (!selected) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
       return;
     }
 
-    selected.name = name;
-    selected.description = description;
-    selected.waterFrequency = waterFrequency;
-    selected.lastWateredAt = lastWateredAt;
-
+    selected.set(fields);
     await selected.save();
     res.json({ message: "Растение успешно обновлено" });
   });
@@ -57,9 +61,8 @@ router.put("/:id", async (req: Request<UpdatePlanParams, {}, UpdatePlantDto>, re
 router.put("/:id/care", async (req: Request<PutCareParams, {}, PutCareDto>, res: Response<MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
     const familyId = requireFamily(user);
-    const { id } = req.params;
-    const { note } = req.body;
-    const selected = await Plant.findOne({ _id: id, family_id: familyId });
+    const note = optionalText(req.body?.note, "Примечание", 200);
+    const selected = await Plant.findOne({ _id: req.params.id, family_id: familyId });
 
     if (!selected) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
@@ -68,7 +71,7 @@ router.put("/:id/care", async (req: Request<PutCareParams, {}, PutCareDto>, res:
 
     const now = new Date();
     selected.careHistory.push({
-      note: note,
+      note,
       createdAt: now,
       createdBy: user._id,
     });
@@ -82,9 +85,8 @@ router.put("/:id/care", async (req: Request<PutCareParams, {}, PutCareDto>, res:
 router.delete("/:id", async (req: Request, res: Response<MsgResponseDto>) => {
   await checkAuthAndReturnUser(req, res, async (user) => {
     const familyId = requireFamily(user);
-    const { id } = req.params;
 
-    const deletedDocument = await Plant.findOneAndDelete({ _id: id, family_id: familyId });
+    const deletedDocument = await Plant.findOneAndDelete({ _id: req.params.id, family_id: familyId });
 
     if (!deletedDocument) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });

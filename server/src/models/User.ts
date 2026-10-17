@@ -7,6 +7,7 @@ export interface IUser extends Document {
   family_id?: Types.ObjectId;
   isVerified: boolean;
   emailToken?: string;
+  verificationSentAt?: Date;
 }
 
 const userSchema = new Schema<IUser>({
@@ -18,7 +19,8 @@ const userSchema = new Schema<IUser>({
     ref: "Family",
   },
   isVerified: { type: Boolean, default: false },
-  emailToken: String,
+  emailToken: { type: String, index: true },
+  verificationSentAt: Date,
 });
 
 const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
