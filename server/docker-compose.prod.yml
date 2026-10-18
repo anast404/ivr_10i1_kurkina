@@ -1,5 +1,6 @@
 # Запуск на сервере: образ собирает и публикует GitHub Actions (.github/workflows/deploy.yml)
-# Рядом положите файл .env (см. .env.example)
+# Рядом положите файл .env (см. .env.example). Переменные MONGO_USER и MONGO_PASSWORD
+# docker compose подставляет из этого же файла.
 services:
   app:
     image: ghcr.io/anast404/happyhome-server:latest
@@ -9,17 +10,30 @@ services:
     env_file:
       - .env
     environment:
-      - MONGO_URI=mongodb://db:27017/happyhome
+      # пароль в строке подключения должен состоять из букв и цифр (иначе его нужно URL-кодировать)
+      - MONGO_URI=mongodb://${MONGO_USER:-happyhome}:${MONGO_PASSWORD:?задайте MONGO_PASSWORD в .env}@db:27017/happyhome?authSource=admin
       - PORT=5000
       - NODE_ENV=production
       - TRUST_PROXY=1
     depends_on:
-      - db
+      db:
+        condition: service_healthy
   db:
     image: mongo:7
     restart: unless-stopped
+    # порт наружу не публикуется: база доступна только контейнеру app
+    environment:
+      # учётная запись создаётся только при первом запуске с пустым томом mongo-data
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-happyhome}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:?задайте MONGO_PASSWORD в .env}
     volumes:
       - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet -u \"$$MONGO_INITDB_ROOT_USERNAME\" -p \"$$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval \"db.adminCommand('ping').ok\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
   mongo-data:

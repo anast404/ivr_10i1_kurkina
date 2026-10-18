@@ -7,7 +7,10 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
-    "test": "tsx --test --test-concurrency=1 test/*.test.ts"
+    "test": "tsx --test --test-concurrency=1 test/*.test.ts",
+    "db:check": "tsx src/scripts/check.ts",
+    "db:init": "tsx src/scripts/check.ts --init",
+    "db:seed": "tsx src/scripts/seed.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

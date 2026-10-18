@@ -23,6 +23,9 @@ const userSchema = new Schema<IUser>({
   verificationSentAt: Date,
 });
 
+// участники семьи ищутся по family_id
+userSchema.index({ family_id: 1 });
+
 const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
 
 export default User;

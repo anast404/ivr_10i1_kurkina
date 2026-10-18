@@ -43,6 +43,9 @@ const shoppingSchema = new Schema<IShopping>({
   }
 });
 
+// все выборки данных идут по семье
+shoppingSchema.index({ family_id: 1 });
+
 const Shopping: Model<IShopping> = mongoose.model<IShopping>("Shopping", shoppingSchema);
 
 export default Shopping;
