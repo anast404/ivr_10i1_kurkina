@@ -61,6 +61,9 @@ const plantSchema = new Schema<IPlant>({
   }
 });
 
+// все выборки данных идут по семье
+plantSchema.index({ family_id: 1 });
+
 const Plant: Model<IPlant> = mongoose.model<IPlant>("Plant", plantSchema);
 
 export default Plant;

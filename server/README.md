@@ -12,6 +12,8 @@ npm install
 npm run dev              # http://localhost:5000/api/health
 ```
 
+Подробнее про базу (Docker, Homebrew, Atlas, production, резервные копии, демо-данные): [DATABASE.md](DATABASE.md).
+
 Если `EMAIL_USER`/`EMAIL_PASS` не заданы, ссылка подтверждения печатается в консоль сервера.
 
 ## Переменные окружения
@@ -19,6 +21,7 @@ npm run dev              # http://localhost:5000/api/health
 | Переменная | Назначение |
 |---|---|
 | `MONGO_URI` | строка подключения к MongoDB |
+| `MONGO_USER`, `MONGO_PASSWORD` | учётная запись MongoDB (только для `docker-compose.prod.yml`) |
 | `JWT_SECRET` | секрет подписи токенов (длинная случайная строка) |
 | `JWT_EXPIRES_IN` | срок жизни токена, по умолчанию `30d` |
 | `EMAIL_USER`, `EMAIL_PASS` | Gmail и «пароль приложения» для писем |
@@ -35,6 +38,8 @@ npm run dev              # http://localhost:5000/api/health
 | `npm run typecheck` | проверка типов кода и тестов |
 | `npm test` | модульные и интеграционные тесты (нужна MongoDB, база `happyhome_test` очищается) |
 | `npm run build` / `npm start` | сборка в `dist/` и запуск |
+| `npm run db:check` / `npm run db:init` | проверка подключения к базе / создание коллекций и индексов |
+| `npm run db:seed` | демо-данные для разработки и защиты |
 
 ## API
 

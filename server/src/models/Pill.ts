@@ -36,6 +36,9 @@ const pillSchema = new Schema<IPill>({
   }
 });
 
+// все выборки данных идут по семье
+pillSchema.index({ family_id: 1 });
+
 const Pill: Model<IPill> = mongoose.model<IPill>("Pill", pillSchema);
 
 export default Pill;
