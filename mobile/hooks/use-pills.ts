@@ -2,6 +2,7 @@ import api from '@/api';
 import useUserStore from '@/state/user';
 import { COLORS } from '@/styles/colors';
 import { PillStatus, TCreatePill, TPill, TUpdatePill } from '@/types/pill';
+import { calendarDaysBetween } from '@/utils/date';
 import { getError } from '@/utils/error';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -9,9 +10,8 @@ import Toast from 'react-native-toast-message';
 
 /** Вычислить статус лекарства по дате */
 export function getPillStatus(expiresAt: string): PillStatus {
-  const now = new Date();
-  const exp = new Date(expiresAt);
-  const diffDays = Math.floor((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  // считаем по календарным дням: в последний день срока лекарство ещё не просрочено
+  const diffDays = calendarDaysBetween(new Date(), new Date(expiresAt));
 
   if (diffDays < 0) return PillStatus.expired;
   if (diffDays <= 30) return PillStatus.expiring_soon;

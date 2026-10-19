@@ -63,7 +63,12 @@ router.put("/:id/bought", async (req: Request<UpdateShoppingParams, {}, UpdateSh
       throw new HttpError(400, "Поле «bought» должно быть true или false");
     }
 
-    const selected = await Shopping.findOne({ _id: req.params.id, family_id: familyId });
+    // атомарное обновление: findOneAndUpdate возвращает документ до изменения,
+    // поэтому из двух одновременных запросов «куплено» только один увидит bought=false
+    const selected = await Shopping.findOneAndUpdate(
+      { _id: req.params.id, family_id: familyId },
+      bought ? { $set: { bought: true, boughtAt: new Date() } } : { $set: { bought: false }, $unset: { boughtAt: 1 } }
+    );
 
     if (!selected) {
       res.status(404).json({ message: 'Запись с таким ID не найдена' });
@@ -71,9 +76,6 @@ router.put("/:id/bought", async (req: Request<UpdateShoppingParams, {}, UpdateSh
     }
 
     const wasBought = !!selected.bought;
-    selected.bought = bought;
-    selected.boughtAt = bought ? new Date() : undefined;
-    await selected.save();
 
     // повтор создаём только при переходе «не куплено → куплено», чтобы повторный запрос не плодил дубликаты
     const days = SHOPPING_FREQUENCY_DAYS[selected.frequency];

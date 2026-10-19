@@ -8,6 +8,7 @@ import {
   TShoppingItem,
   TUpdateShoppingItem
 } from '@/types/shopping';
+import { calendarDaysBetween } from '@/utils/date';
 import { getError } from '@/utils/error';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -16,7 +17,7 @@ import Toast from 'react-native-toast-message';
 /** Вычислить статус товара */
 export function getShoppingStatus(item: TShoppingItem): ShoppingItemStatus {
   if (item.bought) return ShoppingItemStatus.bought;
-  if (item.buyByDate && new Date(item.buyByDate) < new Date()) {
+  if (item.buyByDate && calendarDaysBetween(new Date(), new Date(item.buyByDate)) < 0) {
     return ShoppingItemStatus.overdue;
   }
   return ShoppingItemStatus.pending;

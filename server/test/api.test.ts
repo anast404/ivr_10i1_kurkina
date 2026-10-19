@@ -197,6 +197,19 @@ describe("API", () => {
       assert.equal(shoppings.filter((i) => i.name === "Соль").length, 1, "разовая покупка не повторяется");
     });
 
+    it("покупки: два одновременных запроса «куплено» не создают дубликат", async () => {
+      const token = await registerVerified("race@example.com");
+      await api("POST", "/family/create", { token, body: { name: "Гонка" } });
+      await api("POST", "/shopping/create", { token, body: { name: "Кефир", frequency: "weekly" } });
+      const kefir = ((await api("GET", "/shopping", { token })).json as { id: string }[])[0];
+
+      const results = await Promise.all([1, 2, 3].map(() => api("PUT", `/shopping/${kefir.id}/bought`, { token, body: { bought: true } })));
+      assert.ok(results.every((r) => r.status === 200));
+
+      const shoppings = (await api("GET", "/shopping", { token })).json as unknown[];
+      assert.equal(shoppings.length, 2, "оригинал и ровно одна следующая покупка");
+    });
+
     it("семья: участники, передача владения и очистка данных при выходе последнего", async () => {
       const first = await registerVerified("fam1@example.com");
       const second = await registerVerified("fam2@example.com");

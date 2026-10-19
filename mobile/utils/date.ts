@@ -16,3 +16,13 @@ export function parseDate(str: string): string {
     date.getUTCDate() === day;
   return same ? date.toISOString() : '';
 }
+
+/** Начало календарных суток в локальном часовом поясе */
+function startOfDay(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+/** Сколько календарных дней от from до to (отрицательное, если to раньше) */
+export function calendarDaysBetween(from: Date, to: Date): number {
+  return Math.round((startOfDay(to) - startOfDay(from)) / 86_400_000);
+}

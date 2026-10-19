@@ -1,6 +1,6 @@
 import { PillCard } from '@/components/organism/pill-card';
 import { PillForm } from '@/components/organism/pill-form';
-import { SortKey, usePills } from '@/hooks/use-pills';
+import { getPillStatus, SortKey, usePills } from '@/hooks/use-pills';
 import { COLORS as C } from '@/styles/colors';
 import { PillStatus, TCreatePill, TPill } from '@/types/pill';
 import { useEffect, useRef, useState } from 'react';
@@ -163,7 +163,7 @@ export default function PillsScreen() {
     );
   }
 
-  const expiredCount = pills.filter(p => p.expiresAt && new Date(p.expiresAt) < new Date()).length;
+  const expiredCount = pills.filter(p => p.expiresAt && getPillStatus(p.expiresAt) === PillStatus.expired).length;
   const totalCount = pills.length;
 
   return (
